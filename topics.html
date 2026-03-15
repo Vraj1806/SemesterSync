@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SemesterSync - Topics</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root{--bg-color:#f4f7fe;--sidebar-bg:#fff;--primary-blue:#4318ff;--text-main:#1b2559;--text-secondary:#a3aed0;--card-shadow:0px 10px 30px rgba(0,0,0,0.05);}
+        *{box-sizing:border-box;}body{font-family:'Segoe UI',sans-serif;margin:0;display:flex;background:var(--bg-color);color:var(--text-main);}
+        .sidebar{width:260px;background:var(--sidebar-bg);height:100vh;padding:20px;border-right:1px solid #e0e5f2;position:sticky;top:0;overflow-y:auto;}
+        .logo{font-size:20px;font-weight:bold;color:var(--primary-blue);margin-bottom:40px;display:flex;align-items:center;gap:10px;}
+        .logo img{width:36px;height:36px;object-fit:contain;}
+        .nav-item{display:flex;align-items:center;padding:12px 15px;text-decoration:none;color:var(--text-secondary);font-weight:500;border-radius:10px;margin-bottom:5px;transition:all 0.2s;}
+        .nav-item:hover,.nav-item.active{background:#f4f7fe;color:var(--primary-blue);}
+        .nav-item i{margin-right:15px;width:16px;}
+        .section-label{font-size:12px;color:var(--text-secondary);margin:30px 0 15px 15px;text-transform:uppercase;}
+        .main-content{flex:1;padding:40px;overflow-y:auto;height:100vh;}
+        .header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px;}
+        .header h2{margin:0;}
+        .breadcrumb{font-size:13px;color:var(--text-secondary);margin-bottom:20px;}
+        .breadcrumb a{color:var(--primary-blue);text-decoration:none;font-weight:500;}
+        .breadcrumb a:hover{text-decoration:underline;}
+        .btn-primary{background:var(--primary-blue);color:white;border:none;padding:10px 22px;border-radius:10px;cursor:pointer;font-weight:600;font-size:14px;}
+        .btn-primary:hover{background:#3311dd;}
+        #logoutBtn{border:1px solid #e0e5f2;background:white;cursor:pointer;padding:8px 18px;border-radius:10px;font-size:14px;font-weight:500;color:var(--text-main);}
+        #logoutBtn:hover{background:#fee;color:#ff5b5b;border-color:#ff5b5b;}
+        .toolbar{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;align-items:center;}
+        .search-input{padding:8px 16px;border-radius:20px;border:1px solid #e0e5f2;font-size:13px;outline:none;min-width:180px;color:var(--text-main);}
+        .search-input:focus{border-color:var(--primary-blue);}
+        .filter-btn{border:1px solid #e0e5f2;background:white;padding:7px 16px;border-radius:20px;cursor:pointer;font-size:13px;font-weight:500;color:var(--text-secondary);transition:all 0.2s;}
+        .filter-btn.active,.filter-btn:hover{background:var(--primary-blue);color:white;border-color:var(--primary-blue);}
+        .subject-filter{padding:8px 14px;border-radius:10px;border:1px solid #e0e5f2;font-size:13px;color:var(--text-main);outline:none;cursor:pointer;background:white;}
+        .progress-wrap{margin-bottom:20px;}
+        .progress-label{font-size:13px;color:var(--text-secondary);margin-bottom:6px;}
+        .progress-bar-bg{height:8px;background:#f4f7fe;border-radius:10px;overflow:hidden;}
+        .progress-bar{height:100%;background:linear-gradient(90deg,#4318ff,#7551ff);border-radius:10px;transition:width 0.4s;}
+        .topics-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;}
+        .topic-card{background:white;border-radius:16px;padding:20px;box-shadow:var(--card-shadow);border-left:4px solid #e0e5f2;position:relative;}
+        .topic-card.status-done{border-left-color:#01b574;}.topic-card.status-in-progress{border-left-color:#ffbb33;}.topic-card.status-not-started{border-left-color:#e0e5f2;}
+        .topic-subject{font-size:12px;color:var(--primary-blue);font-weight:600;margin-bottom:6px;}
+        .topic-card h4{margin:0 0 6px;font-size:15px;}
+        .topic-notes{font-size:13px;color:var(--text-secondary);margin-bottom:14px;line-height:1.5;}
+        .topic-footer{display:flex;justify-content:space-between;align-items:center;}
+        .status-pill{font-size:11px;font-weight:600;padding:4px 12px;border-radius:20px;cursor:pointer;border:none;}
+        .pill-not-started{background:#f4f7fe;color:var(--text-secondary);}.pill-in-progress{background:#fff8e6;color:#ffbb33;}.pill-done{background:#e6f9f0;color:#01b574;}
+        .btn-sm{border:none;padding:5px 8px;border-radius:6px;cursor:pointer;font-size:12px;margin-left:4px;}
+        .btn-edit-t{background:#e8f7ff;color:#39b8ff;}.btn-del-t{background:#fff0ef;color:#ee5d50;}
+        .empty-state{text-align:center;padding:60px 20px;color:var(--text-secondary);}
+        .empty-state i{font-size:40px;color:#e0e5f2;margin-bottom:15px;display:block;}
+        #popupOverlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.35);z-index:999;}
+        .popup-box{display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:white;padding:30px;border-radius:18px;box-shadow:0 20px 50px rgba(0,0,0,0.2);z-index:1000;width:360px;}
+        .popup-box h3{margin:0 0 20px;font-size:18px;}
+        .popup-label{font-size:12px;color:var(--text-secondary);margin:12px 0 3px 2px;display:block;}
+        .popup-box input,.popup-box select,.popup-box textarea{width:100%;padding:10px 12px;margin:5px 0;border-radius:8px;border:1px solid #e0e5f2;font-size:14px;color:var(--text-main);outline:none;font-family:inherit;}
+        .popup-box input:focus,.popup-box select:focus{border-color:var(--primary-blue);}
+        .popup-btn-row{display:flex;gap:10px;margin-top:20px;}
+        .btn-save{flex:1;background:var(--primary-blue);color:white;border:none;padding:11px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;font-family:inherit;}
+        .btn-save:hover{background:#3311dd;}
+        .btn-cancel{flex:1;background:white;color:var(--primary-blue);border:1.5px solid var(--primary-blue);padding:11px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;font-family:inherit;}
+        .btn-cancel:hover{background:#f4f7fe;}
+    </style>
+</head>
+<body>
+<div class="sidebar">
+    <div class="logo"><img src="images/logo.png" alt="Logo"> SemesterSync</div>
+    <a href="dashboard.html" class="nav-item"><i class="fas fa-home"></i> Dashboard</a>
+    <a href="subjects.html" class="nav-item"><i class="fas fa-book"></i> Subjects</a>
+    <a href="assignments.html" class="nav-item"><i class="fas fa-tasks"></i> Assignments</a>
+    <a href="exams.html" class="nav-item"><i class="fas fa-calendar-alt"></i> Exam Schedule</a>
+    <a href="profile.html" class="nav-item"><i class="fas fa-user"></i> Profile</a>
+    <div class="section-label">Quick Links</div>
+    <a href="topics.html" class="nav-item active"><i class="fas fa-folder"></i> Topics</a>
+    <a href="gpa.html" class="nav-item"><i class="fas fa-chart-line"></i> GPA Tracker</a>
+</div>
+<div class="main-content">
+    <div class="header">
+        <div>
+            <h2 id="pageTitle">Topics</h2>
+            <div class="breadcrumb" id="breadcrumb"></div>
+        </div>
+        <div style="display:flex;gap:12px;align-items:center;">
+            <button class="btn-primary" onclick="openPopup()"><i class="fas fa-plus"></i> Add Topic</button>
+            <button id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</button>
+        </div>
+    </div>
+    <div class="progress-wrap">
+        <div class="progress-label" id="progressLabel">0 of 0 topics completed</div>
+        <div class="progress-bar-bg"><div class="progress-bar" id="progressBar" style="width:0%"></div></div>
+    </div>
+    <div class="toolbar">
+        <input type="text" class="search-input" id="searchInput" placeholder="Search topics..." oninput="loadTopics()">
+        <select class="subject-filter" id="subjectFilter" onchange="loadTopics()">
+            <option value="all">All Subjects</option>
+        </select>
+        <button class="filter-btn active" onclick="setFilter('all',this)">All</button>
+        <button class="filter-btn" onclick="setFilter('not-started',this)">Not Started</button>
+        <button class="filter-btn" onclick="setFilter('in-progress',this)">In Progress</button>
+        <button class="filter-btn" onclick="setFilter('done',this)">Done</button>
+    </div>
+    <div id="topicsGrid" class="topics-grid"></div>
+    <div id="emptyMsg" class="empty-state" style="display:none;"><i class="fas fa-folder-open"></i><p>No topics found. Click "+ Add Topic" to get started!</p></div>
+</div>
+<div id="popupOverlay" onclick="closePopup()"></div>
+<div class="popup-box" id="topicPopup">
+    <h3 id="popupTitle">Add Topic</h3>
+    <span class="popup-label">Topic Name</span><input id="tName" type="text" placeholder="e.g. Newton's Laws">
+    <span class="popup-label">Subject</span>
+    <select id="tSubject"></select>
+    <span class="popup-label">Status</span>
+    <select id="tStatus">
+        <option value="not-started">Not Started</option>
+        <option value="in-progress">In Progress</option>
+        <option value="done">Done</option>
+    </select>
+    <span class="popup-label">Notes</span>
+    <textarea id="tNotes" rows="2" placeholder="Key points, references..."></textarea>
+    <div class="popup-btn-row">
+        <button class="btn-save" onclick="saveTopic()">Save</button>
+        <button class="btn-cancel" onclick="closePopup()">Cancel</button>
+    </div>
+</div>
+<script src="utils.js"></script>
+<script>
+    if(!localStorage.getItem("userEmail")) window.location.href="login.html";
+    let currentUser=localStorage.getItem("userEmail"),currentFilter="all",editIdx=-1;
+
+    function populateSubjectDropdowns(){
+        let subjects=JSON.parse(localStorage.getItem(currentUser+"_subjects"))||[];
+        let sel=document.getElementById("tSubject");
+        let filt=document.getElementById("subjectFilter");
+        sel.innerHTML=`<option value="General">General</option>`+subjects.map(s=>`<option value="${s.name}">${s.name}</option>`).join("");
+        filt.innerHTML=`<option value="all">All Subjects</option>`+subjects.map(s=>`<option value="${s.name}">${s.name}</option>`).join("");
+        // auto-select if came from subjects page
+        let selected=localStorage.getItem("selectedSubject");
+        if(selected){
+            filt.value=selected;
+            sel.value=selected;
+            document.getElementById("pageTitle").innerText=selected+" — Topics";
+            document.getElementById("breadcrumb").innerHTML=`<a href="subjects.html">← Back to Subjects</a>`;
+            localStorage.removeItem("selectedSubject");
+        }
+    }
+
+    function openPopup(i=-1){
+        editIdx=i;
+        if(i>=0){
+            let t=(JSON.parse(localStorage.getItem(currentUser+"_topics"))||[])[i];
+            document.getElementById("popupTitle").innerText="Edit Topic";
+            document.getElementById("tName").value=t.name;
+            document.getElementById("tSubject").value=t.subject;
+            document.getElementById("tStatus").value=t.status;
+            document.getElementById("tNotes").value=t.notes||"";
+        } else {
+            document.getElementById("popupTitle").innerText="Add Topic";
+            document.getElementById("tName").value="";
+            document.getElementById("tNotes").value="";
+            document.getElementById("tStatus").value="not-started";
+            let filtVal=document.getElementById("subjectFilter").value;
+            document.getElementById("tSubject").value=filtVal!=="all"?filtVal:"General";
+        }
+        document.getElementById("topicPopup").style.display="block";
+        document.getElementById("popupOverlay").style.display="block";
+        document.getElementById("tName").focus();
+    }
+    function closePopup(){document.getElementById("topicPopup").style.display="none";document.getElementById("popupOverlay").style.display="none";}
+    function saveTopic(){
+        let name=document.getElementById("tName").value.trim();
+        if(!name){showToast("Please enter a topic name.","error");return;}
+        let subject=document.getElementById("tSubject").value;
+        let status=document.getElementById("tStatus").value;
+        let notes=document.getElementById("tNotes").value.trim();
+        let topics=JSON.parse(localStorage.getItem(currentUser+"_topics"))||[];
+        if(editIdx>=0){topics[editIdx]={...topics[editIdx],name,subject,status,notes};showToast("Topic updated!","success");}
+        else{topics.push({name,subject,status,notes});showToast("Topic added!","success");}
+        localStorage.setItem(currentUser+"_topics",JSON.stringify(topics));
+        closePopup();loadTopics();
+    }
+    function deleteTopic(i){
+        if(!confirm("Delete this topic?")) return;
+        let topics=JSON.parse(localStorage.getItem(currentUser+"_topics"))||[];
+        topics.splice(i,1);
+        localStorage.setItem(currentUser+"_topics",JSON.stringify(topics));
+        showToast("Topic deleted.","info");loadTopics();
+    }
+    function cycleStatus(i){
+        let topics=JSON.parse(localStorage.getItem(currentUser+"_topics"))||[];
+        let cycle={"not-started":"in-progress","in-progress":"done","done":"not-started"};
+        topics[i].status=cycle[topics[i].status]||"not-started";
+        localStorage.setItem(currentUser+"_topics",JSON.stringify(topics));
+        loadTopics();
+    }
+    function setFilter(f,btn){
+        currentFilter=f;
+        document.querySelectorAll(".filter-btn").forEach(b=>b.classList.remove("active"));
+        btn.classList.add("active");
+        loadTopics();
+    }
+    function sLabel(s){return s==="done"?"Done":s==="in-progress"?"In Progress":"Not Started";}
+    function sPill(s){return s==="done"?"pill-done":s==="in-progress"?"pill-in-progress":"pill-not-started";}
+
+    function loadTopics(){
+        let topics=JSON.parse(localStorage.getItem(currentUser+"_topics"))||[];
+        let search=document.getElementById("searchInput").value.toLowerCase();
+        let subjectFilt=document.getElementById("subjectFilter").value;
+        let done=topics.filter(t=>t.status==="done").length;
+        let pct=topics.length>0?Math.round((done/topics.length)*100):0;
+        document.getElementById("progressLabel").innerText=`${done} of ${topics.length} topics completed (${pct}%)`;
+        document.getElementById("progressBar").style.width=pct+"%";
+
+        let filtered=topics.filter(t=>{
+            let mf=currentFilter==="all"||t.status===currentFilter;
+            let ms=subjectFilt==="all"||t.subject===subjectFilt;
+            let mq=!search||t.name.toLowerCase().includes(search)||t.subject.toLowerCase().includes(search);
+            return mf&&ms&&mq;
+        });
+
+        let grid=document.getElementById("topicsGrid");
+        grid.innerHTML="";
+        document.getElementById("emptyMsg").style.display=filtered.length===0?"block":"none";
+        filtered.forEach(t=>{
+            let ri=topics.indexOf(t);
+            let card=document.createElement("div");
+            card.className=`topic-card status-${t.status}`;
+            card.innerHTML=`
+                <div class="topic-subject"><i class="fas fa-book" style="margin-right:5px;"></i>${t.subject}</div>
+                <h4>${t.name}</h4>
+                <p class="topic-notes">${t.notes||"No notes added."}</p>
+                <div class="topic-footer">
+                    <button class="status-pill ${sPill(t.status)}" onclick="cycleStatus(${ri})" title="Click to change">${sLabel(t.status)}</button>
+                    <div>
+                        <button class="btn-sm btn-edit-t" onclick="openPopup(${ri})"><i class="fas fa-pen"></i></button>
+                        <button class="btn-sm btn-del-t" onclick="deleteTopic(${ri})"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>`;
+            grid.appendChild(card);
+        });
+    }
+    document.getElementById("logoutBtn").onclick=function(){if(confirm("Logout?")){localStorage.removeItem("userEmail");localStorage.removeItem("userName");window.location.href="login.html";}};
+    window.onload=()=>{populateSubjectDropdowns();loadTopics();initSidebar();}
+</script>
+</body>
+</html>

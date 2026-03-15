@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SemesterSync - GPA Tracker</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root{--bg-color:#f4f7fe;--sidebar-bg:#fff;--primary-blue:#4318ff;--text-main:#1b2559;--text-secondary:#a3aed0;--card-shadow:0px 10px 30px rgba(0,0,0,0.05);}
+        *{box-sizing:border-box;}body{font-family:'Segoe UI',sans-serif;margin:0;display:flex;background:var(--bg-color);color:var(--text-main);}
+        .sidebar{width:260px;background:var(--sidebar-bg);height:100vh;padding:20px;border-right:1px solid #e0e5f2;position:sticky;top:0;overflow-y:auto;}
+        .logo{font-size:20px;font-weight:bold;color:var(--primary-blue);margin-bottom:40px;display:flex;align-items:center;gap:10px;}
+        .logo img{width:36px;height:36px;object-fit:contain;}
+        .nav-item{display:flex;align-items:center;padding:12px 15px;text-decoration:none;color:var(--text-secondary);font-weight:500;border-radius:10px;margin-bottom:5px;transition:all 0.2s;}
+        .nav-item:hover,.nav-item.active{background:#f4f7fe;color:var(--primary-blue);}
+        .nav-item i{margin-right:15px;width:16px;}
+        .section-label{font-size:12px;color:var(--text-secondary);margin:30px 0 15px 15px;text-transform:uppercase;}
+        .main-content{flex:1;padding:40px;overflow-y:auto;height:100vh;}
+        .header{display:flex;justify-content:space-between;align-items:center;margin-bottom:25px;flex-wrap:wrap;gap:12px;}
+        .header h2{margin:0;}
+        #logoutBtn{border:1px solid #e0e5f2;background:white;cursor:pointer;padding:8px 18px;border-radius:10px;font-size:14px;font-weight:500;color:var(--text-main);}
+        #logoutBtn:hover{background:#fee;color:#ff5b5b;border-color:#ff5b5b;}
+        .gpa-layout{display:grid;grid-template-columns:1fr 1.8fr;gap:25px;align-items:start;}
+        .card-box{background:white;padding:25px;border-radius:20px;box-shadow:var(--card-shadow);}
+        /* GPA display */
+        .gpa-display{text-align:center;padding:20px 0;}
+        .gpa-ring{width:140px;height:140px;margin:0 auto 20px;}
+        .gpa-num{font-size:42px;font-weight:bold;color:var(--primary-blue);}
+        .gpa-label{font-size:14px;color:var(--text-secondary);margin-bottom:5px;}
+        .gpa-grade{font-size:18px;font-weight:600;margin-bottom:20px;}
+        .gpa-bar-wrap{margin-bottom:10px;}
+        .gpa-bar-label{display:flex;justify-content:space-between;font-size:13px;color:var(--text-secondary);margin-bottom:5px;}
+        .gpa-bar-bg{height:8px;background:#f4f7fe;border-radius:10px;overflow:hidden;}
+        .gpa-bar{height:100%;border-radius:10px;background:linear-gradient(90deg,#4318ff,#7551ff);transition:width 0.5s;}
+        .scale-note{font-size:12px;color:var(--text-secondary);text-align:center;margin-top:15px;}
+        /* Add grade form */
+        .form-group{margin-bottom:14px;}
+        .form-group label{display:block;font-size:13px;color:var(--text-secondary);margin-bottom:5px;font-weight:500;}
+        .form-group input,.form-group select{width:100%;padding:10px 12px;border-radius:8px;border:1px solid #e0e5f2;font-size:14px;color:var(--text-main);outline:none;font-family:inherit;}
+        .form-group input:focus,.form-group select:focus{border-color:var(--primary-blue);}
+        .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+        .btn-primary{background:var(--primary-blue);color:white;border:none;padding:11px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;width:100%;}
+        .btn-primary:hover{background:#3311dd;}
+        /* Table */
+        table{width:100%;border-collapse:collapse;margin-top:15px;}
+        th{text-align:left;color:var(--text-secondary);font-size:11px;text-transform:uppercase;padding-bottom:10px;border-bottom:1px solid #f4f7fe;}
+        td{padding:12px 0;font-size:14px;border-bottom:1px solid #f4f7fe;vertical-align:middle;}
+        .grade-pill{padding:3px 12px;border-radius:20px;font-size:12px;font-weight:bold;}
+        .btn-sm{border:none;padding:5px 8px;border-radius:6px;cursor:pointer;font-size:12px;margin-left:4px;}
+        .btn-del{background:#fff0ef;color:#ee5d50;}
+        .empty-state{text-align:center;padding:40px;color:var(--text-secondary);}
+        .empty-state i{font-size:36px;color:#e0e5f2;margin-bottom:12px;display:block;}
+        .section-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;}
+        .semester-select{border:1px solid #e0e5f2;background:white;padding:7px 12px;border-radius:8px;font-size:13px;color:var(--text-main);outline:none;cursor:pointer;}
+    </style>
+</head>
+<body>
+<div class="sidebar">
+    <div class="logo"><img src="images/logo.png" alt="Logo"> SemesterSync</div>
+    <a href="dashboard.html" class="nav-item"><i class="fas fa-home"></i> Dashboard</a>
+    <a href="subjects.html" class="nav-item"><i class="fas fa-book"></i> Subjects</a>
+    <a href="assignments.html" class="nav-item"><i class="fas fa-tasks"></i> Assignments</a>
+    <a href="exams.html" class="nav-item"><i class="fas fa-calendar-alt"></i> Exam Schedule</a>
+    <a href="profile.html" class="nav-item"><i class="fas fa-user"></i> Profile</a>
+    <div class="section-label">Quick Links</div>
+    <a href="topics.html" class="nav-item"><i class="fas fa-folder"></i> Topics</a>
+    <a href="gpa.html" class="nav-item active"><i class="fas fa-chart-line"></i> GPA Tracker</a>
+</div>
+<div class="main-content">
+    <div class="header">
+        <h2>GPA Tracker</h2>
+        <button id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</button>
+    </div>
+    <div class="gpa-layout">
+        <!-- LEFT: GPA display -->
+        <div>
+            <div class="card-box" style="margin-bottom:20px;">
+                <div class="gpa-display">
+                    <svg class="gpa-ring" viewBox="0 0 120 120">
+                        <circle cx="60" cy="60" r="50" fill="none" stroke="#f4f7fe" stroke-width="12"/>
+                        <circle id="gpaArc" cx="60" cy="60" r="50" fill="none" stroke="#4318ff" stroke-width="12"
+                            stroke-dasharray="314" stroke-dashoffset="314" stroke-linecap="round"
+                            transform="rotate(-90 60 60)" style="transition:stroke-dashoffset 0.6s;"/>
+                    </svg>
+                    <div class="gpa-num" id="gpaNum">—</div>
+                    <div class="gpa-label">Current GPA</div>
+                    <div class="gpa-grade" id="gpaGrade" style="color:var(--primary-blue);">No grades yet</div>
+                </div>
+                <div class="gpa-bar-wrap">
+                    <div class="gpa-bar-label"><span>Progress to 4.0</span><span id="gpaBarLabel">0%</span></div>
+                    <div class="gpa-bar-bg"><div class="gpa-bar" id="gpaBar" style="width:0%"></div></div>
+                </div>
+                <div class="scale-note">Scale: 10-point CGPA (adjust grades below)</div>
+            </div>
+            <!-- Add Grade form -->
+            <div class="card-box">
+                <h4 style="margin:0 0 18px;font-size:16px;">Add Grade</h4>
+                <div class="form-group"><label>Subject Name</label><input type="text" id="gSubject" placeholder="e.g. Mathematics"></div>
+                <div class="form-row">
+                    <div class="form-group"><label>Grade / Score</label>
+                        <select id="gGrade">
+                            <option value="10">O — Outstanding (10)</option>
+                            <option value="9">A+ — Excellent (9)</option>
+                            <option value="8">A — Very Good (8)</option>
+                            <option value="7">B+ — Good (7)</option>
+                            <option value="6">B — Above Average (6)</option>
+                            <option value="5">C — Average (5)</option>
+                            <option value="4">P — Pass (4)</option>
+                            <option value="0">F — Fail (0)</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label>Credits</label><input type="number" id="gCredits" placeholder="e.g. 4" min="1" max="6" value="4"></div>
+                </div>
+                <div class="form-group"><label>Semester</label>
+                    <select id="gSemester">
+                        <option value="1">Semester 1</option><option value="2">Semester 2</option>
+                        <option value="3">Semester 3</option><option value="4">Semester 4</option>
+                        <option value="5">Semester 5</option><option value="6">Semester 6</option>
+                        <option value="7">Semester 7</option><option value="8">Semester 8</option>
+                    </select>
+                </div>
+                <button class="btn-primary" onclick="addGrade()"><i class="fas fa-plus"></i> Add Grade</button>
+            </div>
+        </div>
+        <!-- RIGHT: Grades table -->
+        <div class="card-box">
+            <div class="section-header">
+                <h4 style="margin:0;font-size:16px;">Grade Records</h4>
+                <select class="semester-select" id="semFilter" onchange="loadGrades()">
+                    <option value="all">All Semesters</option>
+                    <option value="1">Semester 1</option><option value="2">Semester 2</option>
+                    <option value="3">Semester 3</option><option value="4">Semester 4</option>
+                    <option value="5">Semester 5</option><option value="6">Semester 6</option>
+                    <option value="7">Semester 7</option><option value="8">Semester 8</option>
+                </select>
+            </div>
+            <table>
+                <thead><tr><th>Subject</th><th>Semester</th><th>Credits</th><th>Grade</th><th>Points</th><th></th></tr></thead>
+                <tbody id="gradesBody"></tbody>
+            </table>
+            <div id="emptyGrades" class="empty-state" style="display:none;"><i class="fas fa-chart-bar"></i><p>No grades yet. Add your first grade!</p></div>
+        </div>
+    </div>
+</div>
+<script src="utils.js"></script>
+<script>
+    if(!localStorage.getItem("userEmail")) window.location.href="login.html";
+    let currentUser=localStorage.getItem("userEmail");
+
+    const gradeLabels={10:"O",9:"A+",8:"A",7:"B+",6:"B",5:"C",4:"P",0:"F"};
+    const gradeColors={10:"#01b574",9:"#01b574",8:"#4318ff",7:"#4318ff",6:"#ffbb33",5:"#ffbb33",4:"#a3aed0",0:"#ff5b5b"};
+
+    function addGrade(){
+        let subject=document.getElementById("gSubject").value.trim();
+        let grade=parseInt(document.getElementById("gGrade").value);
+        let credits=parseInt(document.getElementById("gCredits").value)||4;
+        let semester=document.getElementById("gSemester").value;
+        if(!subject){showToast("Please enter a subject name.","error");return;}
+        if(credits<1||credits>10){showToast("Credits should be between 1 and 10.","error");return;}
+        let grades=JSON.parse(localStorage.getItem(currentUser+"_grades"))||[];
+        grades.push({subject,grade,credits,semester});
+        localStorage.setItem(currentUser+"_grades",JSON.stringify(grades));
+        document.getElementById("gSubject").value="";
+        showToast("Grade added!","success");
+        loadGrades();
+    }
+
+    function deleteGrade(i){
+        if(!confirm("Delete this grade?")) return;
+        let grades=JSON.parse(localStorage.getItem(currentUser+"_grades"))||[];
+        grades.splice(i,1);
+        localStorage.setItem(currentUser+"_grades",JSON.stringify(grades));
+        showToast("Grade deleted.","info");loadGrades();
+    }
+
+    function loadGrades(){
+        let grades=JSON.parse(localStorage.getItem(currentUser+"_grades"))||[];
+        let filter=document.getElementById("semFilter").value;
+        let filtered=filter==="all"?grades:grades.filter(g=>g.semester==filter);
+
+        // calculate CGPA from all grades (not just filtered)
+        let totalPoints=0,totalCredits=0;
+        grades.forEach(g=>{totalPoints+=g.grade*g.credits;totalCredits+=g.credits;});
+        let cgpa=totalCredits>0?(totalPoints/totalCredits):0;
+        let cgpaRound=Math.round(cgpa*100)/100;
+        let pct=Math.min(100,Math.round((cgpa/10)*100));
+        let offset=314-(314*(pct/100));
+
+        document.getElementById("gpaNum").innerText=totalCredits>0?cgpaRound.toFixed(2):"—";
+        document.getElementById("gpaBar").style.width=pct+"%";
+        document.getElementById("gpaBarLabel").innerText=pct+"%";
+        document.getElementById("gpaArc").setAttribute("stroke-dashoffset",offset);
+
+        let grade=cgpa>=9?"A+ — Outstanding":cgpa>=8?"A — Excellent":cgpa>=7?"B+ — Very Good":cgpa>=6?"B — Good":cgpa>=5?"C — Average":cgpa>=4?"P — Pass":totalCredits>0?"F — Fail":"No grades yet";
+        let col=cgpa>=8?"#01b574":cgpa>=6?"#4318ff":cgpa>=4?"#ffbb33":"#ff5b5b";
+        document.getElementById("gpaGrade").innerText=grade;
+        document.getElementById("gpaGrade").style.color=totalCredits>0?col:"var(--text-secondary)";
+
+        let tbody=document.getElementById("gradesBody");
+        tbody.innerHTML="";
+        document.getElementById("emptyGrades").style.display=filtered.length===0?"block":"none";
+        filtered.forEach((g,fi)=>{
+            let ri=grades.indexOf(g);
+            let label=gradeLabels[g.grade]||g.grade;
+            let color=gradeColors[g.grade]||"#a3aed0";
+            let row=document.createElement("tr");
+            row.innerHTML=`
+                <td><strong>${g.subject}</strong></td>
+                <td>Sem ${g.semester}</td>
+                <td>${g.credits}</td>
+                <td><span class="grade-pill" style="background:${color}22;color:${color};">${label}</span></td>
+                <td>${g.grade} × ${g.credits} = ${g.grade*g.credits}</td>
+                <td><button class="btn-sm btn-del" onclick="deleteGrade(${ri})"><i class="fas fa-trash"></i></button></td>`;
+            tbody.appendChild(row);
+        });
+    }
+    document.getElementById("logoutBtn").onclick=function(){if(confirm("Logout?")){localStorage.removeItem("userEmail");localStorage.removeItem("userName");window.location.href="login.html";}};
+    window.onload=()=>{loadGrades();initSidebar();}
+</script>
+</body>
+</html>

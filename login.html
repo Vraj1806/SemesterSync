@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SemesterSync</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'Segoe UI',sans-serif; background:#f4f7fe; overflow:hidden; height:100vh; }
+
+        /* ══ SPLASH ══════════════════════════════════════════════ */
+        #splash {
+            position:fixed; inset:0; background:#06060f;
+            display:flex; flex-direction:column;
+            align-items:center; justify-content:center;
+            z-index:9999; transition:opacity 0.7s ease;
+        }
+        #splash.hide { opacity:0; pointer-events:none; }
+
+        #particleCanvas { position:absolute; inset:0; z-index:0; }
+
+        .splash-inner { position:relative; z-index:2; display:flex; flex-direction:column; align-items:center; }
+
+        /* glow rings */
+        .rings { position:absolute; width:360px; height:360px; top:50%; left:50%; transform:translate(-50%,-50%); pointer-events:none; }
+        .ring {
+            position:absolute; top:50%; left:50%; border-radius:50%;
+            transform:translate(-50%,-50%) scale(0);
+            border:1.5px solid transparent;
+            animation:ringPop 0.5s cubic-bezier(.34,1.56,.64,1) forwards;
+        }
+        .ring:nth-child(1){ width:180px; height:180px; border-color:rgba(99,66,255,.7);  animation-delay:.15s; }
+        .ring:nth-child(2){ width:270px; height:270px; border-color:rgba(99,66,255,.35); animation-delay:.3s;  }
+        .ring:nth-child(3){ width:360px; height:360px; border-color:rgba(99,66,255,.15); animation-delay:.45s; }
+        @keyframes ringPop {
+            0%  { transform:translate(-50%,-50%) scale(0); opacity:0; }
+            100%{ transform:translate(-50%,-50%) scale(1); opacity:1; }
+        }
+
+        /* logo box */
+        .logo-box {
+            width:150px; height:150px; border-radius:32px;
+            background:linear-gradient(145deg,#120630,#0a0a20);
+            border:2px solid rgba(99,66,255,.5);
+            display:flex; align-items:center; justify-content:center;
+            position:relative; overflow:hidden; margin-bottom:28px;
+            transform:scale(0) rotate(-25deg);
+            animation:boxIn .7s cubic-bezier(.34,1.56,.64,1) .25s forwards;
+        }
+        @keyframes boxIn {
+            0%  { transform:scale(0) rotate(-25deg); opacity:0; }
+            100%{ transform:scale(1) rotate(0deg);   opacity:1; }
+        }
+
+        /* shine sweep */
+        .logo-box::after {
+            content:''; position:absolute; top:-50%; left:-120%;
+            width:50%; height:200%;
+            background:linear-gradient(105deg,transparent,rgba(255,255,255,.2),transparent);
+            animation:sweep 1s ease 1.1s forwards;
+        }
+        @keyframes sweep { to { left:200%; } }
+
+        .logo-box img {
+            width:110px; height:110px; object-fit:contain;
+            opacity:0; transform:scale(.2) rotate(20deg);
+            animation:imgIn .8s cubic-bezier(.34,1.56,.64,1) .55s forwards;
+            filter:drop-shadow(0 0 18px rgba(99,66,255,.9));
+            position:relative; z-index:2;
+        }
+        @keyframes imgIn {
+            0%  { opacity:0; transform:scale(.2) rotate(20deg); }
+            100%{ opacity:1; transform:scale(1)  rotate(0deg);  }
+        }
+
+        /* orbiting dots */
+        .orbit-wrap {
+            position:absolute; width:190px; height:190px;
+            top:50%; left:50%; margin:-95px 0 0 -95px;
+            animation:spin 2.8s linear infinite;
+        }
+        .orbit-wrap.r2 { width:230px; height:230px; margin:-115px 0 0 -115px; animation-direction:reverse; animation-duration:3.5s; }
+        .odot {
+            position:absolute; top:0; left:50%; margin-left:-5px;
+            width:10px; height:10px; border-radius:50%; background:#6342ff;
+            box-shadow:0 0 14px #6342ff;
+            opacity:0; animation:dotIn .3s ease .9s forwards;
+        }
+        .orbit-wrap.r2 .odot { width:7px; height:7px; background:#39b8ff; box-shadow:0 0 10px #39b8ff; animation-delay:1.1s; }
+        @keyframes spin   { to { transform:rotate(360deg); } }
+        @keyframes dotIn  { to { opacity:1; } }
+
+        /* green check badge */
+        .check-badge {
+            position:absolute; top:-14px; right:-14px; z-index:5;
+            width:48px; height:48px; border-radius:50%;
+            background:linear-gradient(135deg,#01b574,#00e697);
+            display:flex; align-items:center; justify-content:center;
+            box-shadow:0 0 22px rgba(1,181,116,.75);
+            opacity:0; transform:scale(0) rotate(-45deg);
+            animation:checkIn .5s cubic-bezier(.34,1.56,.64,1) 1.25s forwards;
+        }
+        .check-badge i { color:white; font-size:20px; }
+        @keyframes checkIn {
+            0%  { opacity:0; transform:scale(0) rotate(-45deg); }
+            100%{ opacity:1; transform:scale(1) rotate(0deg);   }
+        }
+
+        /* brand text */
+        .brand { font-size:34px; font-weight:800; color:#fff; letter-spacing:2px; opacity:0; transform:translateY(18px); animation:up .6s ease .85s forwards; text-shadow:0 0 30px rgba(99,66,255,.55); }
+        .brand span { color:#7b52ff; }
+        .tagline { font-size:12px; color:rgba(255,255,255,.4); letter-spacing:5px; text-transform:uppercase; margin-top:7px; opacity:0; transform:translateY(10px); animation:up .5s ease 1.05s forwards; }
+        .welmsg  { font-size:18px; font-weight:600; color:rgba(255,255,255,.85); margin-top:24px; opacity:0; animation:up .5s ease 1.35s forwards; }
+        @keyframes up { to { opacity:1; transform:translateY(0); } }
+
+        /* progress bar */
+        .prog-track { width:200px; height:3px; background:rgba(255,255,255,.1); border-radius:10px; margin-top:18px; overflow:hidden; opacity:0; animation:up .4s ease 1.45s forwards; }
+        .prog-fill  { height:100%; width:0%; background:linear-gradient(90deg,#4318ff,#7b52ff,#39b8ff); border-radius:10px; animation:fill 2s ease 1.55s forwards; }
+        @keyframes fill { to { width:100%; } }
+
+        /* ══ LOGIN FORM ══════════════════════════════════════════ */
+        #loginPage {
+            position:fixed; inset:0; background:#f4f7fe;
+            display:flex; align-items:center; justify-content:center;
+            opacity:0; pointer-events:none; transition:opacity .55s ease;
+        }
+        #loginPage.on { opacity:1; pointer-events:all; }
+
+        .card {
+            background:white; padding:40px; border-radius:24px;
+            box-shadow:0 20px 60px rgba(0,0,0,.1);
+            width:100%; max-width:420px; text-align:center;
+        }
+        .card img.top-logo { width:60px; height:60px; object-fit:contain; margin-bottom:14px; }
+        .card .title  { font-size:24px; font-weight:700; color:#1b2559; margin-bottom:4px; }
+        .card .subtitle { font-size:14px; color:#a3aed0; margin-bottom:28px; }
+
+        .input-group { text-align:left; margin-bottom:15px; }
+        .input-group label { font-size:13px; color:#a3aed0; font-weight:500; display:block; margin-bottom:5px; }
+        .input-group input { width:100%; padding:12px 16px; border-radius:12px; border:1.5px solid #e0e5f2; font-size:14px; color:#1b2559; outline:none; transition:border-color .2s; font-family:inherit; }
+        .input-group input:focus { border-color:#4318ff; }
+
+        .btn-login { width:100%; padding:13px; background:#4318ff; color:white; border:none; border-radius:12px; font-size:15px; font-weight:600; cursor:pointer; margin-top:8px; transition:background .2s,transform .1s; font-family:inherit; }
+        .btn-login:hover  { background:#3311dd; }
+        .btn-login:active { transform:scale(.98); }
+
+        .divider { color:#a3aed0; font-size:12px; margin:20px 0; letter-spacing:2px; }
+
+        .social-row { display:flex; gap:12px; }
+        .s-btn { flex:1; padding:11px; border:1.5px solid #e0e5f2; border-radius:12px; background:white; cursor:pointer; font-size:13px; font-weight:500; color:#1b2559; display:flex; align-items:center; justify-content:center; gap:8px; transition:all .2s; font-family:inherit; }
+        .s-btn img { width:18px; height:18px; }
+        .s-btn:hover { background:#f4f7fe; border-color:#4318ff; }
+
+        .switch { margin-top:22px; font-size:13px; color:#a3aed0; }
+        .switch a { color:#4318ff; font-weight:600; text-decoration:none; }
+    </style>
+</head>
+<body>
+
+<!-- ══ SPLASH ══ -->
+<div id="splash">
+    <canvas id="particleCanvas"></canvas>
+
+    <div class="rings">
+        <div class="ring"></div>
+        <div class="ring"></div>
+        <div class="ring"></div>
+    </div>
+
+    <div class="splash-inner">
+        <div class="logo-box" id="logoBox">
+            <div class="orbit-wrap"><div class="odot"></div></div>
+            <div class="orbit-wrap r2"><div class="odot"></div></div>
+            <img src="images/logo.png" alt="Logo" id="splashImg">
+            <div class="check-badge" id="checkBadge" style="display:none;">
+                <i class="fas fa-check"></i>
+            </div>
+        </div>
+
+        <div class="brand">Semester<span>Sync</span></div>
+        <div class="tagline">Manage your semester</div>
+        <div class="welmsg" id="splashMsg">Loading...</div>
+        <div class="prog-track"><div class="prog-fill" id="progFill"></div></div>
+    </div>
+</div>
+
+<!-- ══ LOGIN ══ -->
+<div id="loginPage">
+    <div class="card">
+        <img src="images/logo.png" alt="Logo" class="top-logo">
+        <div class="title">SemesterSync</div>
+        <div class="subtitle">Manage your semester efficiently</div>
+
+        <div class="input-group">
+            <label>Email</label>
+            <input type="email" id="loginEmail" placeholder="example@email.com">
+        </div>
+        <div class="input-group">
+            <label>Password</label>
+            <input type="password" id="loginPassword" placeholder="••••••••">
+        </div>
+
+        <button class="btn-login" onclick="login()">Login</button>
+
+        <div class="divider">OR CONTINUE WITH</div>
+        <div class="social-row">
+            <button class="s-btn" onclick="googleLogin()"><img src="images/g1.png"> Google</button>
+            <button class="s-btn" onclick="githubLogin()"><img src="images/git1.png"> GitHub</button>
+        </div>
+
+        <div class="switch">Don't have an account? <a href="register.html">Create Account</a></div>
+    </div>
+</div>
+
+<script src="utils.js"></script>
+<script>
+// ── Particles ──────────────────────────────────────────────────────────────
+const cv = document.getElementById("particleCanvas");
+const cx = cv.getContext("2d");
+cv.width = innerWidth; cv.height = innerHeight;
+const pts = Array.from({length:90},()=>({
+    x:Math.random()*cv.width, y:Math.random()*cv.height,
+    r:Math.random()*1.8+.4,
+    dx:(Math.random()-.5)*.45, dy:(Math.random()-.5)*.45,
+    a:Math.random()*.5+.1,
+    c:Math.random()>.5?"99,66,255":"57,184,255"
+}));
+(function drawPts(){
+    cx.clearRect(0,0,cv.width,cv.height);
+    pts.forEach(p=>{
+        cx.beginPath(); cx.arc(p.x,p.y,p.r,0,Math.PI*2);
+        cx.fillStyle=`rgba(${p.c},${p.a})`; cx.fill();
+        p.x+=p.dx; p.y+=p.dy;
+        if(p.x<0) p.x=cv.width;  if(p.x>cv.width)  p.x=0;
+        if(p.y<0) p.y=cv.height; if(p.y>cv.height) p.y=0;
+    });
+    requestAnimationFrame(drawPts);
+})();
+
+// ── Burst particles ────────────────────────────────────────────────────────
+function burst(){
+    const box = document.getElementById("logoBox");
+    const cols = ["#6342ff","#39b8ff","#01b574","#ffbb33","#ff5b5b","#ffffff","#a78bfa"];
+    for(let i=0;i<18;i++){
+        const d = document.createElement("div");
+        d.style.cssText="position:absolute;width:8px;height:8px;border-radius:50%;top:50%;left:50%;z-index:10;pointer-events:none;";
+        d.style.background = cols[i%cols.length];
+        box.appendChild(d);
+        const ang = (i/18)*Math.PI*2;
+        const dist = 75+Math.random()*50;
+        d.animate([
+            {transform:"translate(-50%,-50%) scale(1.2)",opacity:1},
+            {transform:`translate(calc(-50% + ${Math.cos(ang)*dist}px),calc(-50% + ${Math.sin(ang)*dist}px)) scale(0)`,opacity:0}
+        ],{duration:900,delay:1200+i*25,easing:"ease-out",fill:"forwards"});
+    }
+}
+
+// ── Show success splash then redirect ──────────────────────────────────────
+window.showSuccessSplash = function(name, dest){
+    // hide login, show splash
+    document.getElementById("loginPage").classList.remove("on");
+    const sp = document.getElementById("splash");
+    sp.style.display="flex"; sp.style.opacity="1"; sp.classList.remove("hide");
+
+    document.getElementById("splashMsg").innerText = `Welcome, ${name}! 🎉`;
+
+    // reveal check badge
+    const cb = document.getElementById("checkBadge");
+    cb.style.display="flex";
+
+    // logo bounce
+    const img = document.getElementById("splashImg");
+    img.style.opacity="1"; img.style.transform="scale(1)";
+    setTimeout(()=>{
+        img.style.transition="transform .25s ease";
+        img.style.transform="scale(1.18)";
+        setTimeout(()=>{ img.style.transform="scale(1)"; },250);
+    },100);
+
+    // restart the prog bar
+    const pf = document.getElementById("progFill");
+    pf.style.animation="none"; pf.offsetHeight;
+    pf.style.animation="fill 2.2s ease .1s forwards";
+
+    burst();
+
+    setTimeout(()=>{
+        sp.classList.add("hide");
+        setTimeout(()=>{ window.location.href=dest; },700);
+    },3500);
+};
+
+// ── Auth ───────────────────────────────────────────────────────────────────
+async function login(){
+    const email = document.getElementById("loginEmail").value.trim();
+    const pass  = document.getElementById("loginPassword").value;
+    if(!email||!pass){ showToast("Please fill all fields.","error"); return; }
+
+    const users  = JSON.parse(localStorage.getItem("users"))||[];
+    const hashed = await hashPassword(pass);
+    const user   = users.find(u=>u.email===email&&(u.password===hashed||u.password===pass));
+
+    if(user){
+        localStorage.setItem("userEmail",user.email);
+        localStorage.setItem("userName", user.name);
+        showSuccessSplash(user.name,"dashboard.html");
+    } else {
+        showToast("Invalid email or password.","error");
+        document.getElementById("loginPassword").value="";
+    }
+}
+
+document.addEventListener("DOMContentLoaded",()=>{
+    document.getElementById("loginPassword")
+        .addEventListener("keydown",e=>{ if(e.key==="Enter") login(); });
+
+    // brief intro splash then show form
+    setTimeout(()=>{
+        document.getElementById("splash").classList.add("hide");
+        setTimeout(()=>{
+            document.getElementById("splash").style.display="none";
+            document.getElementById("loginPage").classList.add("on");
+        },700);
+    },2000);
+});
+</script>
+
+<!-- Firebase -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
+import { getAuth, GoogleAuthProvider, GithubAuthProvider, signInWithPopup }
+    from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
+
+const app  = initializeApp({
+    apiKey:"AIzaSyBKFuBEjY6nvDmT-OigaMNOlJS_TPj8mCY",
+    authDomain:"semestersync-f1148.firebaseapp.com",
+    projectId:"semestersync-f1148",
+    storageBucket:"semestersync-f1148.firebasestorage.app",
+    messagingSenderId:"382509538771",
+    appId:"1:382509538771:web:f4643049e8c6fabcfde326",
+    measurementId:"G-3HQD8R7PGV"
+});
+const auth=getAuth(app);
+const gProv=new GoogleAuthProvider(), ghProv=new GithubAuthProvider();
+
+function social(prov){
+    signInWithPopup(auth,prov).then(r=>{
+        const u=r.user;
+        localStorage.setItem("userEmail",u.email);
+        localStorage.setItem("userName", u.displayName||u.email);
+        window.showSuccessSplash(u.displayName||"User","dashboard.html");
+    }).catch(e=>showToast(e.message,"error"));
+}
+window.googleLogin=()=>social(gProv);
+window.githubLogin=()=>social(ghProv);
+</script>
+</body>
+</html>

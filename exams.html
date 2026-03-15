@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SemesterSync - Exam Schedule</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root{--bg-color:#f4f7fe;--sidebar-bg:#fff;--primary-blue:#4318ff;--text-main:#1b2559;--text-secondary:#a3aed0;--card-shadow:0px 10px 30px rgba(0,0,0,0.05);}
+        *{box-sizing:border-box;}body{font-family:'Segoe UI',sans-serif;margin:0;display:flex;background:var(--bg-color);color:var(--text-main);}
+        .sidebar{width:260px;background:var(--sidebar-bg);height:100vh;padding:20px;border-right:1px solid #e0e5f2;position:sticky;top:0;overflow-y:auto;}
+        .logo{font-size:20px;font-weight:bold;color:var(--primary-blue);margin-bottom:40px;display:flex;align-items:center;gap:10px;}
+        .logo img{width:36px;height:36px;object-fit:contain;}
+        .nav-item{display:flex;align-items:center;padding:12px 15px;text-decoration:none;color:var(--text-secondary);font-weight:500;border-radius:10px;margin-bottom:5px;transition:all 0.2s;}
+        .nav-item:hover,.nav-item.active{background:#f4f7fe;color:var(--primary-blue);}
+        .nav-item i{margin-right:15px;width:16px;}
+        .section-label{font-size:12px;color:var(--text-secondary);margin:30px 0 15px 15px;text-transform:uppercase;}
+        .main-content{flex:1;padding:40px;overflow-y:auto;height:100vh;}
+        .header{display:flex;justify-content:space-between;align-items:center;margin-bottom:25px;flex-wrap:wrap;gap:12px;}
+        .header h2{margin:0;}
+        .btn-primary{background:var(--primary-blue);color:white;border:none;padding:10px 22px;border-radius:10px;cursor:pointer;font-weight:600;font-size:14px;}
+        .btn-primary:hover{background:#3311dd;}
+        #logoutBtn{border:1px solid #e0e5f2;background:white;cursor:pointer;padding:8px 18px;border-radius:10px;font-size:14px;font-weight:500;color:var(--text-main);}
+        #logoutBtn:hover{background:#fee;color:#ff5b5b;border-color:#ff5b5b;}
+        .stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:15px;margin-bottom:20px;}
+        .mini-stat{background:white;padding:15px 20px;border-radius:15px;box-shadow:var(--card-shadow);}
+        .mini-stat span{font-size:12px;color:var(--text-secondary);display:block;}
+        .mini-stat h3{margin:4px 0 0;font-size:20px;}
+        .view-tabs{display:flex;gap:8px;margin-bottom:20px;}
+        .view-tab{border:1px solid #e0e5f2;background:white;padding:8px 18px;border-radius:10px;cursor:pointer;font-size:13px;font-weight:500;color:var(--text-secondary);transition:all 0.2s;}
+        .view-tab.active{background:var(--primary-blue);color:white;border-color:var(--primary-blue);}
+        /* Calendar */
+        .calendar-wrap{background:white;border-radius:20px;padding:25px;box-shadow:var(--card-shadow);}
+        .cal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;}
+        .cal-header h3{margin:0;font-size:16px;}
+        .cal-nav{background:none;border:1px solid #e0e5f2;width:34px;height:34px;border-radius:8px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;}
+        .cal-nav:hover{background:#f4f7fe;}
+        .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
+        .cal-day-name{text-align:center;font-size:11px;color:var(--text-secondary);font-weight:600;padding:6px 0;}
+        .cal-cell{min-height:70px;border-radius:10px;padding:6px;background:#f9faff;border:1px solid transparent;cursor:default;}
+        .cal-cell.today{background:#ede9fe;border-color:var(--primary-blue);}
+        .cal-cell.other-month{opacity:0.35;}
+        .cal-cell .cal-num{font-size:12px;font-weight:600;margin-bottom:4px;}
+        .cal-cell.today .cal-num{color:var(--primary-blue);}
+        .cal-event{font-size:10px;background:var(--primary-blue);color:white;border-radius:5px;padding:2px 5px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+        /* Cards view */
+        .exams-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:20px;}
+        .exam-card{background:white;border-radius:20px;padding:22px 25px;box-shadow:var(--card-shadow);display:flex;gap:18px;align-items:flex-start;position:relative;}
+        .exam-date-box{min-width:56px;height:60px;background:#f4f7fe;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+        .exam-date-box .day{font-size:22px;font-weight:bold;color:var(--primary-blue);line-height:1;}
+        .exam-date-box .month{font-size:11px;color:var(--text-secondary);text-transform:uppercase;}
+        .exam-info h4{margin:0 0 5px;font-size:15px;}
+        .exam-info p{margin:0;font-size:13px;color:var(--text-secondary);}
+        .exam-meta{display:flex;gap:12px;margin-top:8px;font-size:12px;color:var(--text-secondary);}
+        .days-left{position:absolute;top:18px;right:18px;font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;}
+        .days-soon{background:#fff8e6;color:#ffbb33;}.days-later{background:#e6f9f0;color:#01b574;}.days-past{background:#fee;color:#ff5b5b;}
+        .exam-actions{position:absolute;bottom:18px;right:18px;display:flex;gap:6px;}
+        .btn-sm{border:none;padding:5px 8px;border-radius:6px;cursor:pointer;font-size:12px;}
+        .btn-edit-e{background:#e8f7ff;color:#39b8ff;}.btn-del-e{background:#fff0ef;color:#ee5d50;}
+        .empty-state{text-align:center;padding:60px;color:var(--text-secondary);}
+        .empty-state i{font-size:40px;color:#e0e5f2;margin-bottom:15px;display:block;}
+        #popupOverlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.35);z-index:999;}
+        .popup-box{display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:white;padding:30px;border-radius:18px;box-shadow:0 20px 50px rgba(0,0,0,0.2);z-index:1000;width:360px;}
+        .popup-box h3{margin:0 0 20px;font-size:18px;}
+        .popup-label{font-size:12px;color:var(--text-secondary);margin:12px 0 3px 2px;display:block;}
+        .popup-box input,.popup-box select,.popup-box textarea{width:100%;padding:10px 12px;margin:5px 0;border-radius:8px;border:1px solid #e0e5f2;font-size:14px;color:var(--text-main);outline:none;font-family:inherit;}
+        .popup-box input:focus{border-color:var(--primary-blue);}
+        .popup-btn-row{display:flex;gap:10px;margin-top:20px;}
+        .btn-save{flex:1;background:var(--primary-blue);color:white;border:none;padding:11px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;font-family:inherit;}
+        .btn-save:hover{background:#3311dd;}
+        .btn-cancel{flex:1;background:white;color:var(--primary-blue);border:1.5px solid var(--primary-blue);padding:11px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;font-family:inherit;}
+        .btn-cancel:hover{background:#f4f7fe;}
+    </style>
+</head>
+<body>
+<div class="sidebar">
+    <div class="logo"><img src="images/logo.png" alt="Logo"> SemesterSync</div>
+    <a href="dashboard.html" class="nav-item"><i class="fas fa-home"></i> Dashboard</a>
+    <a href="subjects.html" class="nav-item"><i class="fas fa-book"></i> Subjects</a>
+    <a href="assignments.html" class="nav-item"><i class="fas fa-tasks"></i> Assignments</a>
+    <a href="exams.html" class="nav-item active"><i class="fas fa-calendar-alt"></i> Exam Schedule</a>
+    <a href="profile.html" class="nav-item"><i class="fas fa-user"></i> Profile</a>
+    <div class="section-label">Quick Links</div>
+    <a href="topics.html" class="nav-item"><i class="fas fa-folder"></i> Topics</a>
+    <a href="gpa.html" class="nav-item"><i class="fas fa-chart-line"></i> GPA Tracker</a>
+</div>
+<div class="main-content">
+    <div class="header">
+        <h2>Exam Schedule</h2>
+        <div style="display:flex;gap:12px;align-items:center;">
+            <button class="btn-primary" onclick="openPopup()"><i class="fas fa-plus"></i> Add Exam</button>
+            <button id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</button>
+        </div>
+    </div>
+    <div class="stats-row">
+        <div class="mini-stat"><span>Total Exams</span><h3 id="statTotal">0</h3></div>
+        <div class="mini-stat"><span>Upcoming</span><h3 id="statUpcoming" style="color:#4318ff;">0</h3></div>
+        <div class="mini-stat"><span>Completed</span><h3 id="statPast" style="color:#01b574;">0</h3></div>
+    </div>
+    <div class="view-tabs">
+        <button class="view-tab active" onclick="setView('cards',this)"><i class="fas fa-th-large"></i> Cards</button>
+        <button class="view-tab" onclick="setView('calendar',this)"><i class="fas fa-calendar"></i> Calendar</button>
+    </div>
+    <div id="cardsView">
+        <div id="examsGrid" class="exams-grid"></div>
+        <div id="emptyMsg" class="empty-state" style="display:none;"><i class="fas fa-calendar-times"></i><p>No exams scheduled yet!</p></div>
+    </div>
+    <div id="calendarView" style="display:none;">
+        <div class="calendar-wrap">
+            <div class="cal-header">
+                <button class="cal-nav" onclick="changeMonth(-1)">&#8249;</button>
+                <h3 id="calTitle"></h3>
+                <button class="cal-nav" onclick="changeMonth(1)">&#8250;</button>
+            </div>
+            <div class="cal-grid" id="calGrid"></div>
+        </div>
+    </div>
+</div>
+<div id="popupOverlay" onclick="closePopup()"></div>
+<div class="popup-box" id="examPopup">
+    <h3 id="popupTitle">Add Exam</h3>
+    <span class="popup-label">Subject</span><input id="eSubject" type="text" placeholder="e.g. Mathematics">
+    <span class="popup-label">Exam Date</span><input id="eDate" type="date">
+    <span class="popup-label">Time</span><input id="eTime" type="time">
+    <span class="popup-label">Venue / Room</span><input id="eVenue" type="text" placeholder="e.g. Hall A, Room 201">
+    <span class="popup-label">Notes</span><textarea id="eNotes" rows="2" placeholder="Syllabus, tips..."></textarea>
+    <div class="popup-btn-row">
+        <button class="btn-save" onclick="saveExam()">Save Exam</button>
+        <button class="btn-cancel" onclick="closePopup()">Cancel</button>
+    </div>
+</div>
+<script src="utils.js"></script>
+<script>
+    if(!localStorage.getItem("userEmail")) window.location.href="login.html";
+    let currentUser=localStorage.getItem("userEmail"),editIdx=-1,currentView="cards";
+    let calYear=new Date().getFullYear(),calMonth=new Date().getMonth();
+
+    function setView(v,btn){
+        currentView=v;
+        document.querySelectorAll(".view-tab").forEach(b=>b.classList.remove("active"));
+        btn.classList.add("active");
+        document.getElementById("cardsView").style.display=v==="cards"?"block":"none";
+        document.getElementById("calendarView").style.display=v==="calendar"?"block":"none";
+        if(v==="calendar") renderCalendar();
+    }
+
+    function openPopup(i=-1){
+        editIdx=i;
+        if(i>=0){
+            let e=(JSON.parse(localStorage.getItem(currentUser+"_exams"))||[])[i];
+            document.getElementById("popupTitle").innerText="Edit Exam";
+            document.getElementById("eSubject").value=e.subject;
+            document.getElementById("eDate").value=e.date;
+            document.getElementById("eTime").value=e.time||"";
+            document.getElementById("eVenue").value=e.venue||"";
+            document.getElementById("eNotes").value=e.notes||"";
+        } else {
+            document.getElementById("popupTitle").innerText="Add Exam";
+            ["eSubject","eDate","eTime","eVenue","eNotes"].forEach(id=>document.getElementById(id).value="");
+        }
+        document.getElementById("examPopup").style.display="block";
+        document.getElementById("popupOverlay").style.display="block";
+        document.getElementById("eSubject").focus();
+    }
+    function closePopup(){document.getElementById("examPopup").style.display="none";document.getElementById("popupOverlay").style.display="none";}
+    function saveExam(){
+        let subject=document.getElementById("eSubject").value.trim();
+        let date=document.getElementById("eDate").value;
+        if(!subject||!date){showToast("Please fill Subject and Date.","error");return;}
+        let time=document.getElementById("eTime").value;
+        let venue=document.getElementById("eVenue").value.trim()||"TBA";
+        let notes=document.getElementById("eNotes").value.trim();
+        let exams=JSON.parse(localStorage.getItem(currentUser+"_exams"))||[];
+        if(editIdx>=0){exams[editIdx]={...exams[editIdx],subject,date,time,venue,notes};showToast("Exam updated!","success");}
+        else{exams.push({subject,date,time,venue,notes});showToast("Exam added!","success");}
+        exams.sort((a,b)=>a.date.localeCompare(b.date));
+        localStorage.setItem(currentUser+"_exams",JSON.stringify(exams));
+        closePopup();loadExams();if(currentView==="calendar")renderCalendar();
+    }
+    function deleteExam(i){
+        if(!confirm("Delete this exam?")) return;
+        let exams=JSON.parse(localStorage.getItem(currentUser+"_exams"))||[];
+        exams.splice(i,1);
+        localStorage.setItem(currentUser+"_exams",JSON.stringify(exams));
+        showToast("Exam deleted.","info");loadExams();if(currentView==="calendar")renderCalendar();
+    }
+    function loadExams(){
+        let exams=JSON.parse(localStorage.getItem(currentUser+"_exams"))||[];
+        let todayStr=new Date().toISOString().split("T")[0];
+        let upcoming=exams.filter(e=>e.date>=todayStr).length;
+        let past=exams.filter(e=>e.date<todayStr).length;
+        document.getElementById("statTotal").innerText=exams.length;
+        document.getElementById("statUpcoming").innerText=upcoming;
+        document.getElementById("statPast").innerText=past;
+        let grid=document.getElementById("examsGrid");
+        grid.innerHTML="";
+        document.getElementById("emptyMsg").style.display=exams.length===0?"block":"none";
+        exams.forEach((exam,i)=>{
+            let d=new Date(exam.date+"T00:00:00");
+            let today=new Date();today.setHours(0,0,0,0);
+            let diff=Math.round((d-today)/(1000*60*60*24));
+            let dayLabel=diff<0?"Past":diff===0?"Today!":diff+"d left";
+            let dayClass=diff<0?"days-past":diff<=7?"days-soon":"days-later";
+            let card=document.createElement("div");
+            card.className="exam-card";
+            card.innerHTML=`
+                <div class="exam-date-box"><span class="day">${d.getDate()}</span><span class="month">${d.toLocaleString("en",{month:"short"})}</span></div>
+                <div class="exam-info">
+                    <h4>${exam.subject}</h4>
+                    <p>${exam.notes||"No notes added"}</p>
+                    <div class="exam-meta">
+                        ${exam.time?`<span><i class="fas fa-clock"></i> ${exam.time}</span>`:""}
+                        <span><i class="fas fa-map-marker-alt"></i> ${exam.venue}</span>
+                    </div>
+                </div>
+                <span class="days-left ${dayClass}">${dayLabel}</span>
+                <div class="exam-actions">
+                    <button class="btn-sm btn-edit-e" onclick="openPopup(${i})"><i class="fas fa-pen"></i></button>
+                    <button class="btn-sm btn-del-e" onclick="deleteExam(${i})"><i class="fas fa-trash"></i></button>
+                </div>`;
+            grid.appendChild(card);
+        });
+    }
+    function changeMonth(dir){calMonth+=dir;if(calMonth>11){calMonth=0;calYear++;}else if(calMonth<0){calMonth=11;calYear--;}renderCalendar();}
+    function renderCalendar(){
+        let exams=JSON.parse(localStorage.getItem(currentUser+"_exams"))||[];
+        let examMap={};
+        exams.forEach(e=>{if(!examMap[e.date])examMap[e.date]=[];examMap[e.date].push(e.subject);});
+        const months=["January","February","March","April","May","June","July","August","September","October","November","December"];
+        const days=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+        document.getElementById("calTitle").innerText=months[calMonth]+" "+calYear;
+        let grid=document.getElementById("calGrid");
+        grid.innerHTML=days.map(d=>`<div class="cal-day-name">${d}</div>`).join("");
+        let first=new Date(calYear,calMonth,1).getDay();
+        let daysInMonth=new Date(calYear,calMonth+1,0).getDate();
+        let daysInPrev=new Date(calYear,calMonth,0).getDate();
+        let todayStr=new Date().toISOString().split("T")[0];
+        for(let i=0;i<first;i++){
+            let d=daysInPrev-first+1+i;
+            grid.innerHTML+=`<div class="cal-cell other-month"><div class="cal-num">${d}</div></div>`;
+        }
+        for(let d=1;d<=daysInMonth;d++){
+            let mm=String(calMonth+1).padStart(2,"0"),dd=String(d).padStart(2,"0");
+            let dateStr=`${calYear}-${mm}-${dd}`;
+            let isToday=dateStr===todayStr;
+            let events=examMap[dateStr]||[];
+            let evHTML=events.map(e=>`<div class="cal-event">${e}</div>`).join("");
+            grid.innerHTML+=`<div class="cal-cell${isToday?" today":""}"><div class="cal-num">${d}</div>${evHTML}</div>`;
+        }
+        let remaining=42-first-daysInMonth;
+        for(let d=1;d<=remaining;d++) grid.innerHTML+=`<div class="cal-cell other-month"><div class="cal-num">${d}</div></div>`;
+    }
+    document.getElementById("logoutBtn").onclick=function(){if(confirm("Logout?")){localStorage.removeItem("userEmail");localStorage.removeItem("userName");window.location.href="login.html";}};
+    window.onload=()=>{loadExams();initSidebar();}
+</script>
+</body>
+</html>

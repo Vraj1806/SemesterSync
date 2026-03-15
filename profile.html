@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SemesterSync - Profile</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root { --bg-color: #f4f7fe; --sidebar-bg: #ffffff; --primary-blue: #4318ff; --text-main: #1b2559; --text-secondary: #a3aed0; --card-shadow: 0px 10px 30px rgba(0,0,0,0.05); }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; display: flex; background-color: var(--bg-color); color: var(--text-main); }
+        .sidebar { width: 260px; background: var(--sidebar-bg); height: 100vh; padding: 20px; box-sizing: border-box; border-right: 1px solid #e0e5f2; position: sticky; top: 0; }
+        .logo { font-size: 22px; font-weight: bold; color: var(--primary-blue); margin-bottom: 40px; display: flex; align-items: center; gap: 10px; }
+        .logo img { width: 36px; height: 36px; object-fit: contain; }
+        .nav-item { display: flex; align-items: center; padding: 12px 15px; text-decoration: none; color: var(--text-secondary); font-weight: 500; border-radius: 10px; margin-bottom: 5px; transition: all 0.2s; }
+        .nav-item:hover { background: #f4f7fe; color: var(--primary-blue); }
+        .nav-item.active { background: #f4f7fe; color: var(--primary-blue); }
+        .nav-item i { margin-right: 15px; width: 16px; }
+        .section-label { font-size: 12px; color: var(--text-secondary); margin: 30px 0 15px 15px; text-transform: uppercase; }
+        .main-content { flex: 1; padding: 40px; overflow-y: auto; height: 100vh; box-sizing: border-box; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .header h2 { margin: 0; }
+
+        .profile-layout { display: grid; grid-template-columns: 1fr 1.6fr; gap: 25px; align-items: start; }
+
+        .card-box { background: white; padding: 30px; border-radius: 20px; box-shadow: var(--card-shadow); }
+
+        .avatar-wrap { display: flex; flex-direction: column; align-items: center; text-align: center; }
+        .avatar { width: 90px; height: 90px; border-radius: 50%; background: linear-gradient(135deg, #4318ff, #7551ff); display: flex; align-items: center; justify-content: center; font-size: 36px; font-weight: bold; color: white; margin-bottom: 15px; }
+        .avatar-wrap h3 { margin: 0 0 4px; font-size: 18px; }
+        .avatar-wrap p { margin: 0; font-size: 13px; color: var(--text-secondary); }
+
+        .profile-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px; width: 100%; }
+        .pstat { background: #f4f7fe; border-radius: 12px; padding: 12px; text-align: center; }
+        .pstat span { font-size: 11px; color: var(--text-secondary); display: block; }
+        .pstat h4 { margin: 4px 0 0; font-size: 18px; color: var(--primary-blue); }
+
+        .form-group { margin-bottom: 18px; }
+        .form-group label { display: block; font-size: 13px; color: var(--text-secondary); margin-bottom: 6px; font-weight: 500; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid #e0e5f2; box-sizing: border-box; font-size: 14px; color: var(--text-main); outline: none; font-family: inherit; background: #f9fafb; }
+        .form-group input:focus, .form-group select:focus { border-color: var(--primary-blue); background: white; }
+        .form-group input[readonly] { background: #f4f7fe; cursor: default; color: var(--text-secondary); }
+
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+
+        .btn-save-profile { background: var(--primary-blue); color: white; border: none; padding: 12px 30px; border-radius: 10px; cursor: pointer; font-size: 14px; font-weight: 600; width: 100%; margin-top: 5px; transition: background 0.2s; }
+        .btn-save-profile:hover { background: #3311dd; }
+
+        .section-title { font-size: 14px; font-weight: 600; color: var(--text-main); margin: 0 0 18px; padding-bottom: 10px; border-bottom: 1px solid #f4f7fe; }
+
+        .danger-zone { margin-top: 25px; background: white; padding: 25px 30px; border-radius: 20px; box-shadow: var(--card-shadow); border-left: 4px solid #ff5b5b; }
+        .danger-zone h4 { margin: 0 0 8px; color: #ff5b5b; font-size: 15px; }
+        .danger-zone p { margin: 0 0 15px; font-size: 13px; color: var(--text-secondary); }
+        .btn-danger { background: #ff5b5b; color: white; border: none; padding: 10px 22px; border-radius: 10px; cursor: pointer; font-size: 14px; font-weight: 600; transition: background 0.2s; }
+        .btn-danger:hover { background: #e04444; }
+
+        .success-msg { display: none; background: #e6f9f0; color: #01b574; padding: 10px 15px; border-radius: 10px; font-size: 13px; margin-bottom: 15px; font-weight: 500; }
+
+        #logoutBtn { border: 1px solid #e0e5f2; background: white; cursor: pointer; padding: 8px 18px; border-radius: 10px; font-size: 14px; font-weight: 500; color: var(--text-main); transition: all 0.2s; }
+        #logoutBtn:hover { background: #fee; color: #ff5b5b; border-color: #ff5b5b; }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <div class="logo"><img src="images/logo.png" alt="Logo"> SemesterSync</div>
+    <a href="dashboard.html" class="nav-item"><i class="fas fa-home"></i> Dashboard</a>
+    <a href="subjects.html" class="nav-item"><i class="fas fa-book"></i> Subjects</a>
+    <a href="assignments.html" class="nav-item"><i class="fas fa-tasks"></i> Assignments</a>
+    <a href="exams.html" class="nav-item"><i class="fas fa-calendar-alt"></i> Exam Schedule</a>
+    <a href="profile.html" class="nav-item active"><i class="fas fa-user"></i> Profile</a>
+    <div class="section-label">Quick Links</div>
+    <a href="topics.html" class="nav-item"><i class="fas fa-folder"></i> Topics</a>
+</div>
+
+<div class="main-content">
+    <div class="header">
+        <h2>My Profile</h2>
+        <button id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</button>
+    </div>
+
+    <div class="profile-layout">
+
+        <!-- LEFT: Avatar + Stats -->
+        <div class="card-box avatar-wrap">
+            <div class="avatar" id="avatarInitials">?</div>
+            <h3 id="profileNameDisplay">Loading...</h3>
+            <p id="profileEmailDisplay">loading@email.com</p>
+            <div class="profile-stats">
+                <div class="pstat"><span>Tasks</span><h4 id="ps-tasks">0</h4></div>
+                <div class="pstat"><span>Done</span><h4 id="ps-done">0</h4></div>
+                <div class="pstat"><span>Subjects</span><h4 id="ps-subjects">0</h4></div>
+                <div class="pstat"><span>Exams</span><h4 id="ps-exams">0</h4></div>
+            </div>
+        </div>
+
+        <!-- RIGHT: Edit Form -->
+        <div class="card-box">
+            <p class="section-title">Edit Profile</p>
+            <div id="successMsg" class="success-msg"><i class="fas fa-check-circle"></i> Profile updated successfully!</div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" id="editName" placeholder="Your full name">
+                </div>
+                <div class="form-group">
+                    <label>Email (read only)</label>
+                    <input type="email" id="editEmail" readonly>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>College / University</label>
+                    <input type="text" id="editCollege" placeholder="e.g. MIT">
+                </div>
+                <div class="form-group">
+                    <label>Semester</label>
+                    <select id="editSemester">
+                        <option value="">Select semester</option>
+                        <option value="1">Semester 1</option>
+                        <option value="2">Semester 2</option>
+                        <option value="3">Semester 3</option>
+                        <option value="4">Semester 4</option>
+                        <option value="5">Semester 5</option>
+                        <option value="6">Semester 6</option>
+                        <option value="7">Semester 7</option>
+                        <option value="8">Semester 8</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Branch / Major</label>
+                    <input type="text" id="editBranch" placeholder="e.g. Computer Science">
+                </div>
+                <div class="form-group">
+                    <label>Phone</label>
+                    <input type="text" id="editPhone" placeholder="e.g. +91 9876543210">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Bio</label>
+                <textarea id="editBio" rows="2" placeholder="Tell something about yourself..."></textarea>
+            </div>
+
+            <button class="btn-save-profile" onclick="saveProfile()"><i class="fas fa-save"></i> Save Changes</button>
+        </div>
+    </div>
+
+    <div class="danger-zone">
+        <h4><i class="fas fa-exclamation-triangle"></i> Danger Zone</h4>
+        <p>Permanently delete all your tasks, assignments, subjects and exams. This cannot be undone.</p>
+        <button class="btn-danger" onclick="clearAllData()"><i class="fas fa-trash"></i> Clear All My Data</button>
+    </div>
+</div>
+
+<script>
+    if(!localStorage.getItem("userEmail")) window.location.href = "login.html";
+    let currentUser = localStorage.getItem("userEmail");
+
+    function getInitials(name){
+        if(!name) return "?";
+        let parts = name.trim().split(" ");
+        return parts.length >= 2 ? parts[0][0].toUpperCase() + parts[1][0].toUpperCase() : parts[0][0].toUpperCase();
+    }
+
+    function loadProfile(){
+        let name     = localStorage.getItem("userName") || "";
+        let profile  = JSON.parse(localStorage.getItem(currentUser + "_profile")) || {};
+        let tasks    = JSON.parse(localStorage.getItem(currentUser + "_tasks")) || [];
+        let subjects = JSON.parse(localStorage.getItem(currentUser + "_subjects")) || [];
+        let exams    = JSON.parse(localStorage.getItem(currentUser + "_exams")) || [];
+        let done     = tasks.filter(t => t.completed).length;
+
+        document.getElementById("avatarInitials").innerText   = getInitials(name);
+        document.getElementById("profileNameDisplay").innerText = name || "No name set";
+        document.getElementById("profileEmailDisplay").innerText = currentUser;
+
+        document.getElementById("ps-tasks").innerText    = tasks.length;
+        document.getElementById("ps-done").innerText     = done;
+        document.getElementById("ps-subjects").innerText = subjects.length;
+        document.getElementById("ps-exams").innerText    = exams.length;
+
+        document.getElementById("editName").value     = name;
+        document.getElementById("editEmail").value    = currentUser;
+        document.getElementById("editCollege").value  = profile.college || "";
+        document.getElementById("editSemester").value = profile.semester || "";
+        document.getElementById("editBranch").value   = profile.branch || "";
+        document.getElementById("editPhone").value    = profile.phone || "";
+        document.getElementById("editBio").value      = profile.bio || "";
+    }
+
+    function saveProfile(){
+        let name = document.getElementById("editName").value.trim();
+        if(name === ""){ alert("Name cannot be empty."); return; }
+
+        localStorage.setItem("userName", name);
+
+        let profile = {
+            college:  document.getElementById("editCollege").value.trim(),
+            semester: document.getElementById("editSemester").value,
+            branch:   document.getElementById("editBranch").value.trim(),
+            phone:    document.getElementById("editPhone").value.trim(),
+            bio:      document.getElementById("editBio").value.trim()
+        };
+        localStorage.setItem(currentUser + "_profile", JSON.stringify(profile));
+
+        let msg = document.getElementById("successMsg");
+        msg.style.display = "block";
+        setTimeout(() => msg.style.display = "none", 3000);
+        loadProfile();
+    }
+
+    function clearAllData(){
+        if(!confirm("This will delete ALL your tasks, assignments, subjects and exams. Are you sure?")) return;
+        if(!confirm("Really sure? This cannot be undone!")) return;
+        let keys = ["_tasks","_assignments","_subjects","_exams","_topics","_profile"];
+        keys.forEach(k => localStorage.removeItem(currentUser + k));
+        alert("All data cleared.");
+        loadProfile();
+    }
+
+    document.getElementById("logoutBtn").onclick = function(){
+        if(confirm("Logout?")){ localStorage.removeItem("userEmail"); localStorage.removeItem("userName"); window.location.href = "login.html"; }
+    }
+
+    window.onload = loadProfile;
+</script>
+</body>
+</html>

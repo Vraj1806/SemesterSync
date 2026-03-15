@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SemesterSync Dashboard</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root { --bg-color:#f4f7fe; --sidebar-bg:#ffffff; --primary-blue:#4318ff; --text-main:#1b2559; --text-secondary:#a3aed0; --card-shadow:0px 10px 30px rgba(0,0,0,0.05); }
+        * { box-sizing:border-box; }
+        body { font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif; margin:0; display:flex; background-color:var(--bg-color); color:var(--text-main); }
+        .sidebar { width:260px; background:var(--sidebar-bg); height:100vh; padding:20px; box-sizing:border-box; border-right:1px solid #e0e5f2; position:sticky; top:0; overflow-y:auto; }
+        .logo { font-size:20px; font-weight:bold; color:var(--primary-blue); margin-bottom:40px; display:flex; align-items:center; gap:10px; }
+        .logo img { width:36px; height:36px; object-fit:contain; }
+        .nav-item { display:flex; align-items:center; padding:12px 15px; text-decoration:none; color:var(--text-secondary); font-weight:500; border-radius:10px; margin-bottom:5px; transition:all 0.2s; }
+        .nav-item:hover, .nav-item.active { background:#f4f7fe; color:var(--primary-blue); }
+        .nav-item i { margin-right:15px; width:16px; }
+        .section-label { font-size:12px; color:var(--text-secondary); margin:30px 0 15px 15px; text-transform:uppercase; }
+        .main-content { flex:1; padding:40px; overflow-y:auto; height:100vh; }
+        .header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:12px; }
+        .header h2 { margin:0; }
+        .header-right { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+        .search-wrap { position:relative; }
+        .search-wrap input { padding:9px 16px 9px 38px; border-radius:20px; border:1px solid #e0e5f2; font-size:13px; outline:none; width:220px; color:var(--text-main); background:white; }
+        .search-wrap input:focus { border-color:var(--primary-blue); }
+        .search-wrap .si { position:absolute; left:13px; top:50%; transform:translateY(-50%); color:var(--text-secondary); font-size:13px; }
+        .search-results { position:absolute; top:42px; left:0; width:300px; background:white; border-radius:14px; box-shadow:0 10px 30px rgba(0,0,0,0.12); z-index:500; display:none; max-height:320px; overflow-y:auto; }
+        .search-result-item { padding:12px 16px; font-size:13px; cursor:pointer; border-bottom:1px solid #f4f7fe; display:flex; align-items:center; gap:10px; }
+        .search-result-item:hover { background:#f4f7fe; }
+        .search-result-item:last-child { border-bottom:none; }
+        .search-tag { font-size:10px; padding:2px 8px; border-radius:10px; font-weight:600; white-space:nowrap; }
+        .date-badge { font-size:13px; color:var(--text-secondary); background:white; padding:8px 15px; border-radius:10px; border:1px solid #e0e5f2; }
+        .stats-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:15px; margin-bottom:25px; }
+        .stat-card { background:white; padding:18px; border-radius:18px; box-shadow:var(--card-shadow); display:flex; align-items:center; gap:12px; }
+        .stat-icon { width:42px; height:42px; border-radius:12px; display:flex; align-items:center; justify-content:center; background:#f4f7fe; color:var(--primary-blue); font-size:16px; flex-shrink:0; }
+        .stat-info span { color:var(--text-secondary); font-size:12px; display:block; }
+        .stat-info h3 { margin:3px 0 0; font-size:20px; }
+        .toolbar { display:flex; align-items:center; gap:10px; margin-bottom:20px; flex-wrap:wrap; }
+        .btn-add { background:var(--primary-blue); color:white; border:none; padding:10px 20px; border-radius:10px; cursor:pointer; font-weight:600; font-size:14px; transition:background 0.2s; }
+        .btn-add:hover { background:#3311dd; }
+        .sort-select { border:1px solid #e0e5f2; background:white; padding:9px 14px; border-radius:10px; font-size:13px; color:var(--text-main); outline:none; cursor:pointer; }
+        .dashboard-grid { display:grid; grid-template-columns:1.5fr 1fr; gap:25px; }
+        .card-box { background:white; padding:25px; border-radius:20px; box-shadow:var(--card-shadow); }
+        .card-box h4 { margin:0 0 5px; font-size:16px; }
+        table { width:100%; border-collapse:collapse; margin-top:15px; }
+        th { text-align:left; color:var(--text-secondary); font-size:11px; text-transform:uppercase; padding-bottom:10px; border-bottom:1px solid #f4f7fe; cursor:pointer; user-select:none; }
+        th:hover { color:var(--primary-blue); }
+        td { padding:12px 0; font-size:14px; border-bottom:1px solid #f4f7fe; vertical-align:middle; }
+        .priority { padding:3px 10px; border-radius:20px; font-size:11px; font-weight:bold; }
+        .high { background:#fee; color:#ff5b5b; }
+        .medium { background:#fff8e6; color:#ffbb33; }
+        .low { background:#e6f9f0; color:#01b574; }
+        .completed-row td { text-decoration:line-through; color:var(--text-secondary); }
+        .btn-icon { border:none; padding:5px 8px; border-radius:6px; cursor:pointer; font-size:12px; margin-left:4px; }
+        .btn-edit { background:#e8f7ff; color:#39b8ff; }
+        .btn-edit:hover { background:#d0effc; }
+        .btn-delete { background:#fff0ef; color:#ee5d50; }
+        .btn-delete:hover { background:#fee; }
+        .empty-state { text-align:center; padding:30px 20px; color:var(--text-secondary); }
+        .empty-state i { font-size:32px; color:#e0e5f2; margin-bottom:10px; display:block; }
+        .empty-state p { margin:0 0 10px; font-size:13px; }
+        .empty-state a { color:var(--primary-blue); font-weight:600; text-decoration:none; font-size:13px; }
+        #logoutBtn { display:none; }
+        .avatar-btn { width:38px; height:38px; border-radius:50%; background:var(--primary-blue); border:none; cursor:pointer; color:#fff; font-weight:700; font-size:14px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+        .avatar-wrap-rel { position:relative; }
+        .avatar-dropdown { position:absolute; top:50px; right:0; background:white; border-radius:16px; box-shadow:0 10px 40px rgba(0,0,0,.15); padding:8px; min-width:230px; z-index:1001; display:none; border:1px solid #e0e5f2; }
+        .avatar-dropdown.open { display:block; animation:ddIn .2s ease; }
+        @keyframes ddIn { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:translateY(0)} }
+        .dd-header { padding:12px 12px 10px; border-bottom:1px solid #f4f7fe; margin-bottom:6px; }
+        .dd-header strong { display:block; font-size:14px; font-weight:700; color:#1b2559; }
+        .dd-header span   { font-size:12px; color:#a3aed0; }
+        .dd-item { display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:10px; cursor:pointer; font-size:14px; color:#1b2559; font-weight:500; border:none; background:none; width:100%; transition:background .15s; font-family:inherit; }
+        .dd-item:hover { background:#f4f7fe; }
+        .dd-item i { width:16px; color:#a3aed0; font-size:14px; }
+        .dd-item.danger { color:#ff5b5b; }
+        .dd-item.danger i { color:#ff5b5b; }
+        #popupOverlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.35); z-index:999; }
+        .popup-box { display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:white; padding:30px; border-radius:18px; box-shadow:0 20px 50px rgba(0,0,0,0.2); z-index:1000; width:340px; }
+        .popup-box h3 { margin:0 0 20px; font-size:18px; }
+        .popup-label { font-size:12px; color:var(--text-secondary); margin:12px 0 3px 2px; display:block; }
+        .popup-box input, .popup-box select { width:100%; padding:10px 12px; margin:5px 0; border-radius:8px; border:1px solid #e0e5f2; font-size:14px; color:var(--text-main); outline:none; font-family:inherit; }
+        .popup-box input:focus, .popup-box select:focus { border-color:var(--primary-blue); }
+        .popup-btn-row { display:flex; gap:10px; margin-top:20px; }
+        .btn-save { flex:1; background:var(--primary-blue); color:white; border:none; padding:11px; border-radius:8px; cursor:pointer; font-size:14px; font-weight:600; font-family:inherit; }
+        .btn-save:hover { background:#3311dd; }
+        .btn-cancel { flex:1; background:white; color:var(--primary-blue); border:1.5px solid var(--primary-blue); padding:11px; border-radius:8px; cursor:pointer; font-size:14px; font-weight:600; font-family:inherit; }
+        .btn-cancel:hover { background:#f4f7fe; }
+    </style>
+</head>
+<body>
+<div class="sidebar">
+    <div class="logo"><img src="images/logo.png" alt="Logo"> SemesterSync</div>
+    <a href="dashboard.html" class="nav-item active"><i class="fas fa-home"></i> Dashboard</a>
+    <a href="subjects.html" class="nav-item"><i class="fas fa-book"></i> Subjects</a>
+    <a href="assignments.html" class="nav-item"><i class="fas fa-tasks"></i> Assignments</a>
+    <a href="exams.html" class="nav-item"><i class="fas fa-calendar-alt"></i> Exam Schedule</a>
+    <a href="profile.html" class="nav-item"><i class="fas fa-user"></i> Profile</a>
+    <div class="section-label">Quick Links</div>
+    <a href="topics.html" class="nav-item"><i class="fas fa-folder"></i> Topics</a>
+    <a href="gpa.html" class="nav-item"><i class="fas fa-chart-line"></i> GPA Tracker</a>
+    <a href="settings.html" class="nav-item"><i class="fas fa-cog"></i> Settings</a>
+</div>
+
+<div class="main-content">
+    <div class="header">
+        <h2 id="welcomeMsg">Welcome 👋</h2>
+        <div class="header-right">
+            <div class="search-wrap">
+                <i class="fas fa-search si"></i>
+                <input type="text" id="globalSearch" placeholder="Search anything..." oninput="doSearch()">
+                <div class="search-results" id="searchResults"></div>
+            </div>
+            <span class="date-badge" id="todayDate"></span>
+            <button id="logoutBtn"></button>
+            <div class="avatar-wrap-rel">
+                <button class="avatar-btn" id="avatarBtn" onclick="toggleDropdown()">?</button>
+                <div class="avatar-dropdown" id="avatarDropdown">
+                    <div class="dd-header">
+                        <strong id="ddName">Loading</strong>
+                        <span id="ddEmail">loading@email.com</span>
+                    </div>
+                    <button class="dd-item" onclick="window.location.href='profile.html'"><i class="fas fa-user"></i> My Profile</button>
+                    <button class="dd-item" onclick="window.location.href='settings.html'"><i class="fas fa-cog"></i> Settings</button>
+                    <button class="dd-item" onclick="window.location.href='gpa.html'"><i class="fas fa-chart-line"></i> GPA Tracker</button>
+                    <button class="dd-item danger" onclick="doLogout()"><i class="fas fa-sign-out-alt"></i> Sign Out</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-book"></i></div>
+            <div class="stat-info"><span>Subjects</span><h3 id="statSubjects">0</h3></div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon" style="color:#01b574;background:#e6f9f0;"><i class="fas fa-list"></i></div>
+            <div class="stat-info"><span>Total Tasks</span><h3 id="statTotal">0</h3></div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon" style="color:#ee5d50;background:#fff0ef;"><i class="fas fa-flag"></i></div>
+            <div class="stat-info"><span>Due Today</span><h3 id="statDueToday">0</h3></div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon" style="color:#4318ff;background:#ede9fe;"><i class="fas fa-check-circle"></i></div>
+            <div class="stat-info"><span>Completed</span><h3 id="statCompleted">0</h3></div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon" style="color:#39b8ff;background:#e8f7ff;"><i class="fas fa-calendar-check"></i></div>
+            <div class="stat-info"><span>Upcoming Exams</span><h3 id="statUpcomingExams">0</h3></div>
+        </div>
+    </div>
+
+    <div class="toolbar">
+        <button class="btn-add" id="addTaskBtn"><i class="fas fa-plus"></i> Add Task</button>
+        <select class="sort-select" id="taskSort" onchange="loadTasks()">
+            <option value="date-asc">Sort: Date ↑</option>
+            <option value="date-desc">Sort: Date ↓</option>
+            <option value="priority">Sort: Priority</option>
+            <option value="name">Sort: Name</option>
+        </select>
+    </div>
+
+    <div class="dashboard-grid">
+        <div class="card-box">
+            <h4>My Tasks</h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width:30px;"></th>
+                        <th onclick="cycleSortTask('name')">Task ⇅</th>
+                        <th onclick="cycleSortTask('date-asc')">Due Date ⇅</th>
+                        <th onclick="cycleSortTask('priority')">Priority ⇅</th>
+                        <th style="width:80px;"></th>
+                    </tr>
+                </thead>
+                <tbody id="taskTableBody"></tbody>
+            </table>
+            <div id="taskEmpty" class="empty-state" style="display:none;">
+                <i class="fas fa-clipboard-list"></i>
+                <p>No tasks yet!</p>
+                <a href="#" onclick="document.getElementById('addTaskBtn').click()">+ Add your first task</a>
+            </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:25px;">
+            <div class="card-box">
+                <h4>Upcoming Assignments</h4>
+                <table>
+                    <thead><tr><th>Title</th><th>Due</th><th>Priority</th></tr></thead>
+                    <tbody id="assignTableBody"></tbody>
+                </table>
+                <div id="assignEmpty" class="empty-state" style="display:none;">
+                    <i class="fas fa-tasks"></i>
+                    <p>No pending assignments!</p>
+                    <a href="assignments.html">Go to Assignments →</a>
+                </div>
+            </div>
+
+            <div class="card-box">
+                <h4>Upcoming Exams</h4>
+                <table>
+                    <thead><tr><th>Subject</th><th>Date</th><th>Venue</th></tr></thead>
+                    <tbody id="examTableBody"></tbody>
+                </table>
+                <div id="examEmpty" class="empty-state" style="display:none;">
+                    <i class="fas fa-calendar-times"></i>
+                    <p>No upcoming exams!</p>
+                    <a href="exams.html">Go to Exam Schedule →</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="popupOverlay" onclick="closePopup()"></div>
+<div class="popup-box" id="taskPopup">
+    <h3 id="popupTitle">Add New Task</h3>
+    <span class="popup-label">Task Name</span>
+    <input id="taskName" type="text" placeholder="e.g. Submit lab report">
+    <span class="popup-label">Due Date</span>
+    <input id="taskDate" type="date">
+    <span class="popup-label">Subject</span>
+    <input id="taskSubject" type="text" placeholder="e.g. Physics">
+    <span class="popup-label">Priority</span>
+    <select id="taskPriority">
+        <option value="high">High</option>
+        <option value="medium" selected>Medium</option>
+        <option value="low">Low</option>
+    </select>
+    <div class="popup-btn-row">
+        <button class="btn-save" onclick="saveTask()">Save Task</button>
+        <button class="btn-cancel" onclick="closePopup()">Cancel</button>
+    </div>
+</div>
+
+<script src="utils.js"></script>
+<script>
+    if(!localStorage.getItem("userEmail")) window.location.href="login.html";
+    let currentUser = localStorage.getItem("userEmail");
+    let editingTaskIndex = -1;
+
+    document.getElementById("todayDate").innerText = new Date().toLocaleDateString("en-US",{weekday:"short",year:"numeric",month:"short",day:"numeric"});
+
+    document.getElementById("addTaskBtn").onclick = function(){
+        editingTaskIndex = -1;
+        document.getElementById("popupTitle").innerText = "Add New Task";
+        ["taskName","taskDate","taskSubject"].forEach(id => document.getElementById(id).value="");
+        document.getElementById("taskPriority").value = "medium";
+        document.getElementById("taskPopup").style.display="block";
+        document.getElementById("popupOverlay").style.display="block";
+        document.getElementById("taskName").focus();
+    }
+
+    function openEditTask(index){
+        let tasks = JSON.parse(localStorage.getItem(currentUser+"_tasks"))||[];
+        let t = tasks[index];
+        editingTaskIndex = index;
+        document.getElementById("popupTitle").innerText  = "Edit Task";
+        document.getElementById("taskName").value        = t.name;
+        document.getElementById("taskDate").value        = t.date;
+        document.getElementById("taskSubject").value     = t.subject||"";
+        document.getElementById("taskPriority").value    = t.priority||"medium";
+        document.getElementById("taskPopup").style.display="block";
+        document.getElementById("popupOverlay").style.display="block";
+    }
+
+    function closePopup(){
+        document.getElementById("taskPopup").style.display="none";
+        document.getElementById("popupOverlay").style.display="none";
+    }
+
+    function saveTask(){
+        let name     = document.getElementById("taskName").value.trim();
+        let date     = document.getElementById("taskDate").value;
+        let subject  = document.getElementById("taskSubject").value.trim()||"General";
+        let priority = document.getElementById("taskPriority").value;
+        if(!name||!date){ showToast("Please fill in Task Name and Due Date.","error"); return; }
+        let tasks = JSON.parse(localStorage.getItem(currentUser+"_tasks"))||[];
+        if(editingTaskIndex>=0){
+            tasks[editingTaskIndex]={...tasks[editingTaskIndex],name,date,subject,priority};
+            showToast("Task updated!","success");
+        } else {
+            tasks.push({name,date,subject,priority,completed:false});
+            showToast("Task added!","success");
+        }
+        localStorage.setItem(currentUser+"_tasks",JSON.stringify(tasks));
+        closePopup(); loadTasks();
+    }
+
+    function deleteTask(index){
+        if(!confirm("Delete this task?")) return;
+        let tasks = JSON.parse(localStorage.getItem(currentUser+"_tasks"))||[];
+        tasks.splice(index,1);
+        localStorage.setItem(currentUser+"_tasks",JSON.stringify(tasks));
+        showToast("Task deleted.","info"); loadTasks();
+    }
+
+    function toggleTask(index){
+        let tasks = JSON.parse(localStorage.getItem(currentUser+"_tasks"))||[];
+        tasks[index].completed=!tasks[index].completed;
+        localStorage.setItem(currentUser+"_tasks",JSON.stringify(tasks));
+        loadTasks();
+    }
+
+    function cycleSortTask(val){
+        document.getElementById("taskSort").value=val; loadTasks();
+    }
+
+    function loadTasks(){
+        let tasks    = JSON.parse(localStorage.getItem(currentUser+"_tasks"))||[];
+        let sort     = document.getElementById("taskSort").value;
+        let todayStr = new Date().toISOString().split("T")[0];
+        let completed=0, dueToday=0;
+        const pOrder={high:0,medium:1,low:2};
+        if(sort==="date-asc")  tasks.sort((a,b)=>a.date.localeCompare(b.date));
+        if(sort==="date-desc") tasks.sort((a,b)=>b.date.localeCompare(a.date));
+        if(sort==="priority")  tasks.sort((a,b)=>(pOrder[a.priority]||1)-(pOrder[b.priority]||1));
+        if(sort==="name")      tasks.sort((a,b)=>a.name.localeCompare(b.name));
+        let tbody=document.getElementById("taskTableBody");
+        tbody.innerHTML="";
+        tasks.forEach((task,index)=>{
+            if(task.completed) completed++;
+            if(task.date===todayStr&&!task.completed) dueToday++;
+            let pClass=task.priority==="high"?"high":task.priority==="low"?"low":"medium";
+            let row=document.createElement("tr");
+            if(task.completed) row.className="completed-row";
+            row.innerHTML=`
+                <td><input type="checkbox" ${task.completed?"checked":""} onchange="toggleTask(${index})" style="cursor:pointer;width:15px;height:15px;"></td>
+                <td>${task.name}<br><span style="font-size:11px;color:var(--text-secondary);">${task.subject||""}</span></td>
+                <td>${formatDate(task.date)}</td>
+                <td><span class="priority ${pClass}">${cap(task.priority)}</span></td>
+                <td>
+                    <button class="btn-icon btn-edit" onclick="openEditTask(${index})"><i class="fas fa-pen"></i></button>
+                    <button class="btn-icon btn-delete" onclick="deleteTask(${index})"><i class="fas fa-trash"></i></button>
+                </td>`;
+            tbody.appendChild(row);
+        });
+        document.getElementById("taskEmpty").style.display=tasks.length===0?"block":"none";
+        document.getElementById("statTotal").innerText=tasks.length;
+        document.getElementById("statDueToday").innerText=dueToday;
+        document.getElementById("statCompleted").innerText=completed;
+    }
+
+    function loadAssignments(){
+        let assignments=JSON.parse(localStorage.getItem(currentUser+"_assignments"))||[];
+        let todayStr=new Date().toISOString().split("T")[0];
+        let upcoming=assignments.filter(a=>a.status!=="submitted"&&a.dueDate>=todayStr);
+        upcoming.sort((a,b)=>a.dueDate.localeCompare(b.dueDate));
+        let tbody=document.getElementById("assignTableBody");
+        tbody.innerHTML="";
+        document.getElementById("assignEmpty").style.display=upcoming.length===0?"block":"none";
+        upcoming.slice(0,5).forEach(a=>{
+            let pClass=a.priority==="high"?"high":a.priority==="low"?"low":"medium";
+            let row=document.createElement("tr");
+            row.innerHTML=`<td>${a.title}</td><td>${formatDate(a.dueDate)}</td><td><span class="priority ${pClass}">${cap(a.priority)}</span></td>`;
+            tbody.appendChild(row);
+        });
+    }
+
+    function loadExams(){
+        let exams=JSON.parse(localStorage.getItem(currentUser+"_exams"))||[];
+        let todayStr=new Date().toISOString().split("T")[0];
+        let upcoming=exams.filter(e=>e.date>=todayStr);
+        upcoming.sort((a,b)=>a.date.localeCompare(b.date));
+        let tbody=document.getElementById("examTableBody");
+        tbody.innerHTML="";
+        document.getElementById("examEmpty").style.display=upcoming.length===0?"block":"none";
+        upcoming.forEach(exam=>{
+            let d=new Date(exam.date+"T00:00:00");
+            let today=new Date(); today.setHours(0,0,0,0);
+            let diff=Math.round((d-today)/(1000*60*60*24));
+            let badge=diff===0
+                ?`<span style="font-size:10px;font-weight:600;background:#fff8e6;color:#ffbb33;padding:2px 8px;border-radius:20px;margin-left:5px;">Today!</span>`
+                :diff<=7
+                ?`<span style="font-size:10px;font-weight:600;background:#fff0ef;color:#ff5b5b;padding:2px 8px;border-radius:20px;margin-left:5px;">${diff}d</span>`
+                :`<span style="font-size:10px;font-weight:600;background:#e6f9f0;color:#01b574;padding:2px 8px;border-radius:20px;margin-left:5px;">${diff}d</span>`;
+            let row=document.createElement("tr");
+            row.innerHTML=`<td><strong>${exam.subject}</strong></td><td>${formatDate(exam.date)}${badge}</td><td style="color:var(--text-secondary);">${exam.venue||"TBA"}</td>`;
+            tbody.appendChild(row);
+        });
+        document.getElementById("statUpcomingExams").innerText=upcoming.length;
+    }
+
+    function loadSubjects(){
+        let subjects=JSON.parse(localStorage.getItem(currentUser+"_subjects"))||[];
+        document.getElementById("statSubjects").innerText=subjects.length;
+    }
+
+    function doSearch(){
+        let q=document.getElementById("globalSearch").value.trim().toLowerCase();
+        let box=document.getElementById("searchResults");
+        if(q.length<2){box.style.display="none";return;}
+        let results=[];
+        let tasks=JSON.parse(localStorage.getItem(currentUser+"_tasks"))||[];
+        let assignments=JSON.parse(localStorage.getItem(currentUser+"_assignments"))||[];
+        let subjects=JSON.parse(localStorage.getItem(currentUser+"_subjects"))||[];
+        let exams=JSON.parse(localStorage.getItem(currentUser+"_exams"))||[];
+        let topics=JSON.parse(localStorage.getItem(currentUser+"_topics"))||[];
+        tasks.filter(t=>t.name.toLowerCase().includes(q)).forEach(t=>results.push({label:t.name,type:"Task",color:"#4318ff",bg:"#ede9fe",link:"dashboard.html"}));
+        assignments.filter(a=>a.title.toLowerCase().includes(q)).forEach(a=>results.push({label:a.title,type:"Assignment",color:"#ffbb33",bg:"#fff8e6",link:"assignments.html"}));
+        subjects.filter(s=>s.name.toLowerCase().includes(q)).forEach(s=>results.push({label:s.name,type:"Subject",color:"#01b574",bg:"#e6f9f0",link:"subjects.html"}));
+        exams.filter(e=>e.subject.toLowerCase().includes(q)).forEach(e=>results.push({label:e.subject,type:"Exam",color:"#ee5d50",bg:"#fff0ef",link:"exams.html"}));
+        topics.filter(t=>t.name.toLowerCase().includes(q)).forEach(t=>results.push({label:t.name,type:"Topic",color:"#39b8ff",bg:"#e8f7ff",link:"topics.html"}));
+        box.innerHTML=results.length===0
+            ?`<div class="search-result-item" style="color:var(--text-secondary);">No results found</div>`
+            :results.slice(0,8).map(r=>`<div class="search-result-item" onclick="window.location.href='${r.link}'"><span class="search-tag" style="background:${r.bg};color:${r.color};">${r.type}</span>${r.label}</div>`).join("");
+        box.style.display="block";
+    }
+
+    document.addEventListener("click",e=>{
+        if(!e.target.closest(".avatar-wrap-rel")) document.getElementById("avatarDropdown").classList.remove("open");
+        if(!e.target.closest(".search-wrap")) document.getElementById("searchResults").style.display="none";
+    });
+
+    function toggleDropdown(){
+        document.getElementById("avatarDropdown").classList.toggle("open");
+    }
+
+    function doLogout(){
+        if(confirm("Sign out?")){
+            localStorage.removeItem("userEmail");
+            localStorage.removeItem("userName");
+            window.location.href="login.html";
+        }
+    }
+
+    // apply saved theme on load
+    function applyTheme(){
+        const cu=localStorage.getItem("userEmail");
+        const t=localStorage.getItem(cu+"_theme");
+        const themes={
+            dark:    {primary:"#7b52ff",bg:"#0f1117"},
+            ocean:   {primary:"#1d4ed8",bg:"#eff6ff"},
+            lavender:{primary:"#7c3aed",bg:"#faf5ff"},
+            rose:    {primary:"#e11d48",bg:"#fff1f2"},
+            gaia:    {primary:"#16a34a",bg:"#f0fdf4"}
+        };
+        if(t&&themes[t]){
+            document.documentElement.style.setProperty("--primary-blue",themes[t].primary);
+            document.documentElement.style.setProperty("--bg-color",themes[t].bg);
+        }
+    }
+
+    document.getElementById("logoutBtn").onclick=function(){
+        if(confirm("Logout?")){localStorage.removeItem("userEmail");localStorage.removeItem("userName");window.location.href="login.html";}
+    }
+
+    window.onload=function(){
+        let userName=localStorage.getItem("userName")||"Student";
+        let email=localStorage.getItem("userEmail")||"";
+        document.getElementById("welcomeMsg").innerHTML="Welcome, "+userName+" 👋";
+        // avatar initials
+        let parts=userName.trim().split(" ");
+        let ini=parts.length>=2?parts[0][0].toUpperCase()+parts[1][0].toUpperCase():parts[0][0].toUpperCase();
+        document.getElementById("avatarBtn").innerText=ini;
+        document.getElementById("ddName").innerText=userName;
+        document.getElementById("ddEmail").innerText=email;
+        loadTasks(); loadAssignments(); loadExams(); loadSubjects();
+        checkReminders(currentUser); initSidebar(); applyTheme();
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SemesterSync - Assignments</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root{--bg-color:#f4f7fe;--sidebar-bg:#fff;--primary-blue:#4318ff;--text-main:#1b2559;--text-secondary:#a3aed0;--card-shadow:0px 10px 30px rgba(0,0,0,0.05);}
+        *{box-sizing:border-box;}body{font-family:'Segoe UI',sans-serif;margin:0;display:flex;background:var(--bg-color);color:var(--text-main);}
+        .sidebar{width:260px;background:var(--sidebar-bg);height:100vh;padding:20px;border-right:1px solid #e0e5f2;position:sticky;top:0;overflow-y:auto;}
+        .logo{font-size:20px;font-weight:bold;color:var(--primary-blue);margin-bottom:40px;display:flex;align-items:center;gap:10px;}
+        .logo img{width:36px;height:36px;object-fit:contain;}
+        .nav-item{display:flex;align-items:center;padding:12px 15px;text-decoration:none;color:var(--text-secondary);font-weight:500;border-radius:10px;margin-bottom:5px;transition:all 0.2s;}
+        .nav-item:hover,.nav-item.active{background:#f4f7fe;color:var(--primary-blue);}
+        .nav-item i{margin-right:15px;width:16px;}
+        .section-label{font-size:12px;color:var(--text-secondary);margin:30px 0 15px 15px;text-transform:uppercase;}
+        .main-content{flex:1;padding:40px;overflow-y:auto;height:100vh;}
+        .header{display:flex;justify-content:space-between;align-items:center;margin-bottom:25px;flex-wrap:wrap;gap:12px;}
+        .header h2{margin:0;}
+        .btn-primary{background:var(--primary-blue);color:white;border:none;padding:10px 22px;border-radius:10px;cursor:pointer;font-weight:600;font-size:14px;}
+        .btn-primary:hover{background:#3311dd;}
+        #logoutBtn{border:1px solid #e0e5f2;background:white;cursor:pointer;padding:8px 18px;border-radius:10px;font-size:14px;font-weight:500;color:var(--text-main);}
+        #logoutBtn:hover{background:#fee;color:#ff5b5b;border-color:#ff5b5b;}
+        .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin-bottom:20px;}
+        .mini-stat{background:white;padding:15px 20px;border-radius:15px;box-shadow:var(--card-shadow);}
+        .mini-stat span{font-size:12px;color:var(--text-secondary);display:block;}
+        .mini-stat h3{margin:4px 0 0;font-size:20px;}
+        .toolbar{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;align-items:center;}
+        .filter-btn{border:1px solid #e0e5f2;background:white;padding:7px 16px;border-radius:20px;cursor:pointer;font-size:13px;font-weight:500;color:var(--text-secondary);transition:all 0.2s;}
+        .filter-btn.active,.filter-btn:hover{background:var(--primary-blue);color:white;border-color:var(--primary-blue);}
+        .sort-select{border:1px solid #e0e5f2;background:white;padding:8px 14px;border-radius:10px;font-size:13px;color:var(--text-main);outline:none;cursor:pointer;}
+        .card-box{background:white;padding:25px;border-radius:20px;box-shadow:var(--card-shadow);}
+        table{width:100%;border-collapse:collapse;margin-top:10px;}
+        th{text-align:left;color:var(--text-secondary);font-size:11px;text-transform:uppercase;padding-bottom:10px;border-bottom:1px solid #f4f7fe;}
+        td{padding:12px 0;font-size:14px;border-bottom:1px solid #f4f7fe;vertical-align:middle;}
+        .priority{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:bold;}
+        .high{background:#fee;color:#ff5b5b;}.medium{background:#fff8e6;color:#ffbb33;}.low{background:#e6f9f0;color:#01b574;}
+        .status-badge{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:bold;}
+        .pending{background:#fff8e6;color:#ffbb33;}.submitted{background:#e6f9f0;color:#01b574;}.overdue{background:#fee;color:#ff5b5b;}
+        .btn-sm{border:none;padding:5px 8px;border-radius:6px;cursor:pointer;font-size:12px;margin-left:4px;}
+        .btn-submit{background:#e6f9f0;color:#01b574;}.btn-edit-a{background:#e8f7ff;color:#39b8ff;}.btn-del-a{background:#fff0ef;color:#ee5d50;}
+        .empty-state{text-align:center;padding:40px;color:var(--text-secondary);}
+        .empty-state i{font-size:36px;color:#e0e5f2;margin-bottom:12px;display:block;}
+        #popupOverlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.35);z-index:999;}
+        .popup-box{display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:white;padding:30px;border-radius:18px;box-shadow:0 20px 50px rgba(0,0,0,0.2);z-index:1000;width:360px;}
+        .popup-box h3{margin:0 0 20px;font-size:18px;}
+        .popup-label{font-size:12px;color:var(--text-secondary);margin:12px 0 3px 2px;display:block;}
+        .popup-box input,.popup-box select,.popup-box textarea{width:100%;padding:10px 12px;margin:5px 0;border-radius:8px;border:1px solid #e0e5f2;font-size:14px;color:var(--text-main);outline:none;font-family:inherit;}
+        .popup-box input:focus,.popup-box select:focus{border-color:var(--primary-blue);}
+        .popup-btn-row{display:flex;gap:10px;margin-top:20px;}
+        .btn-save{flex:1;background:var(--primary-blue);color:white;border:none;padding:11px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;font-family:inherit;}
+        .btn-save:hover{background:#3311dd;}
+        .btn-cancel{flex:1;background:white;color:var(--primary-blue);border:1.5px solid var(--primary-blue);padding:11px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;font-family:inherit;}
+        .btn-cancel:hover{background:#f4f7fe;}
+    </style>
+</head>
+<body>
+<div class="sidebar">
+    <div class="logo"><img src="images/logo.png" alt="Logo"> SemesterSync</div>
+    <a href="dashboard.html" class="nav-item"><i class="fas fa-home"></i> Dashboard</a>
+    <a href="subjects.html" class="nav-item"><i class="fas fa-book"></i> Subjects</a>
+    <a href="assignments.html" class="nav-item active"><i class="fas fa-tasks"></i> Assignments</a>
+    <a href="exams.html" class="nav-item"><i class="fas fa-calendar-alt"></i> Exam Schedule</a>
+    <a href="profile.html" class="nav-item"><i class="fas fa-user"></i> Profile</a>
+    <div class="section-label">Quick Links</div>
+    <a href="topics.html" class="nav-item"><i class="fas fa-folder"></i> Topics</a>
+    <a href="gpa.html" class="nav-item"><i class="fas fa-chart-line"></i> GPA Tracker</a>
+</div>
+<div class="main-content">
+    <div class="header">
+        <h2>Assignments</h2>
+        <div style="display:flex;gap:12px;align-items:center;">
+            <button class="btn-primary" onclick="openPopup()"><i class="fas fa-plus"></i> Add Assignment</button>
+            <button id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</button>
+        </div>
+    </div>
+    <div class="stats-row">
+        <div class="mini-stat"><span>Total</span><h3 id="statTotal">0</h3></div>
+        <div class="mini-stat"><span>Pending</span><h3 id="statPending" style="color:#ffbb33;">0</h3></div>
+        <div class="mini-stat"><span>Submitted</span><h3 id="statSubmitted" style="color:#01b574;">0</h3></div>
+        <div class="mini-stat"><span>Overdue</span><h3 id="statOverdue" style="color:#ff5b5b;">0</h3></div>
+    </div>
+    <div class="toolbar">
+        <button class="filter-btn active" onclick="setFilter('all',this)">All</button>
+        <button class="filter-btn" onclick="setFilter('pending',this)">Pending</button>
+        <button class="filter-btn" onclick="setFilter('submitted',this)">Submitted</button>
+        <button class="filter-btn" onclick="setFilter('overdue',this)">Overdue</button>
+        <select class="sort-select" id="sortSelect" onchange="loadAssignments()">
+            <option value="date-asc">Sort: Due Date ↑</option>
+            <option value="date-desc">Sort: Due Date ↓</option>
+            <option value="priority">Sort: Priority</option>
+            <option value="name">Sort: Name</option>
+        </select>
+    </div>
+    <div class="card-box">
+        <table>
+            <thead><tr><th>Assignment</th><th>Subject</th><th>Due Date</th><th>Priority</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="assignmentBody"></tbody>
+        </table>
+        <div id="emptyMsg" class="empty-state" style="display:none;"><i class="fas fa-tasks"></i><p>No assignments yet. Click "+ Add Assignment"!</p></div>
+    </div>
+</div>
+<div id="popupOverlay" onclick="closePopup()"></div>
+<div class="popup-box" id="assignmentPopup">
+    <h3 id="popupTitle">Add Assignment</h3>
+    <span class="popup-label">Title</span><input id="aTitle" type="text" placeholder="e.g. Research Paper">
+    <span class="popup-label">Subject</span><input id="aSubject" type="text" placeholder="e.g. Physics">
+    <span class="popup-label">Due Date</span><input id="aDueDate" type="date">
+    <span class="popup-label">Priority</span>
+    <select id="aPriority"><option value="high">High</option><option value="medium" selected>Medium</option><option value="low">Low</option></select>
+    <span class="popup-label">Notes</span><textarea id="aNotes" rows="2" placeholder="Extra notes..."></textarea>
+    <div class="popup-btn-row">
+        <button class="btn-save" onclick="saveAssignment()">Save</button>
+        <button class="btn-cancel" onclick="closePopup()">Cancel</button>
+    </div>
+</div>
+<script src="utils.js"></script>
+<script>
+    if(!localStorage.getItem("userEmail")) window.location.href="login.html";
+    let currentUser=localStorage.getItem("userEmail"),currentFilter="all",editIdx=-1;
+
+    function openPopup(i=-1){
+        editIdx=i;
+        if(i>=0){
+            let a=(JSON.parse(localStorage.getItem(currentUser+"_assignments"))||[])[i];
+            document.getElementById("popupTitle").innerText="Edit Assignment";
+            document.getElementById("aTitle").value=a.title;
+            document.getElementById("aSubject").value=a.subject;
+            document.getElementById("aDueDate").value=a.dueDate;
+            document.getElementById("aPriority").value=a.priority;
+            document.getElementById("aNotes").value=a.notes||"";
+        } else {
+            document.getElementById("popupTitle").innerText="Add Assignment";
+            ["aTitle","aSubject","aDueDate","aNotes"].forEach(id=>document.getElementById(id).value="");
+            document.getElementById("aPriority").value="medium";
+        }
+        document.getElementById("assignmentPopup").style.display="block";
+        document.getElementById("popupOverlay").style.display="block";
+        document.getElementById("aTitle").focus();
+    }
+    function closePopup(){document.getElementById("assignmentPopup").style.display="none";document.getElementById("popupOverlay").style.display="none";}
+    function saveAssignment(){
+        let title=document.getElementById("aTitle").value.trim();
+        let dueDate=document.getElementById("aDueDate").value;
+        if(!title||!dueDate){showToast("Please fill Title and Due Date.","error");return;}
+        let subject=document.getElementById("aSubject").value.trim()||"General";
+        let priority=document.getElementById("aPriority").value;
+        let notes=document.getElementById("aNotes").value.trim();
+        let todayStr=new Date().toISOString().split("T")[0];
+        let assignments=JSON.parse(localStorage.getItem(currentUser+"_assignments"))||[];
+        if(editIdx>=0){
+            assignments[editIdx]={...assignments[editIdx],title,subject,dueDate,priority,notes};
+            showToast("Assignment updated!","success");
+        } else {
+            let status=dueDate<todayStr?"overdue":"pending";
+            assignments.push({title,subject,dueDate,priority,notes,status});
+            showToast("Assignment added!","success");
+        }
+        localStorage.setItem(currentUser+"_assignments",JSON.stringify(assignments));
+        closePopup();loadAssignments();
+    }
+    function deleteAssignment(i){
+        if(!confirm("Delete this assignment?")) return;
+        let a=JSON.parse(localStorage.getItem(currentUser+"_assignments"))||[];
+        a.splice(i,1);
+        localStorage.setItem(currentUser+"_assignments",JSON.stringify(a));
+        showToast("Assignment deleted.","info");loadAssignments();
+    }
+    function markSubmitted(i){
+        let a=JSON.parse(localStorage.getItem(currentUser+"_assignments"))||[];
+        a[i].status=a[i].status==="submitted"?"pending":"submitted";
+        localStorage.setItem(currentUser+"_assignments",JSON.stringify(a));
+        showToast(a[i].status==="submitted"?"Marked as submitted!":"Marked as pending.","success");
+        loadAssignments();
+    }
+    function setFilter(f,btn){currentFilter=f;document.querySelectorAll(".filter-btn").forEach(b=>b.classList.remove("active"));btn.classList.add("active");loadAssignments();}
+
+    function loadAssignments(){
+        let assignments=JSON.parse(localStorage.getItem(currentUser+"_assignments"))||[];
+        let sort=document.getElementById("sortSelect").value;
+        let todayStr=new Date().toISOString().split("T")[0];
+        const pOrder={high:0,medium:1,low:2};
+        // auto-flag overdue
+        assignments.forEach((a,i)=>{if(a.status!=="submitted"&&a.dueDate<todayStr) assignments[i].status=a.status="overdue";});
+        localStorage.setItem(currentUser+"_assignments",JSON.stringify(assignments));
+
+        let total=assignments.length,pending=0,submitted=0,overdue=0;
+        assignments.forEach(a=>{if(a.status==="pending")pending++;else if(a.status==="submitted")submitted++;else if(a.status==="overdue")overdue++;});
+        document.getElementById("statTotal").innerText=total;
+        document.getElementById("statPending").innerText=pending;
+        document.getElementById("statSubmitted").innerText=submitted;
+        document.getElementById("statOverdue").innerText=overdue;
+
+        let filtered=currentFilter==="all"?[...assignments]:assignments.filter(a=>a.status===currentFilter);
+        if(sort==="date-asc")  filtered.sort((a,b)=>a.dueDate.localeCompare(b.dueDate));
+        if(sort==="date-desc") filtered.sort((a,b)=>b.dueDate.localeCompare(a.dueDate));
+        if(sort==="priority")  filtered.sort((a,b)=>(pOrder[a.priority]||1)-(pOrder[b.priority]||1));
+        if(sort==="name")      filtered.sort((a,b)=>a.title.localeCompare(b.title));
+
+        let tbody=document.getElementById("assignmentBody");
+        tbody.innerHTML="";
+        document.getElementById("emptyMsg").style.display=filtered.length===0?"block":"none";
+        filtered.forEach(a=>{
+            let ri=assignments.indexOf(a);
+            let pC=a.priority==="high"?"high":a.priority==="low"?"low":"medium";
+            let sC=a.status==="submitted"?"submitted":a.status==="overdue"?"overdue":"pending";
+            let btnL=a.status==="submitted"?"Undo":"Submit";
+            let row=document.createElement("tr");
+            row.innerHTML=`
+                <td><strong>${a.title}</strong>${a.notes?`<br><span style="font-size:11px;color:var(--text-secondary);">${a.notes}</span>`:""}</td>
+                <td>${a.subject}</td><td>${formatDate(a.dueDate)}</td>
+                <td><span class="priority ${pC}">${cap(a.priority)}</span></td>
+                <td><span class="status-badge ${sC}">${cap(a.status)}</span></td>
+                <td>
+                    <button class="btn-sm btn-submit" onclick="markSubmitted(${ri})">${btnL}</button>
+                    <button class="btn-sm btn-edit-a" onclick="openPopup(${ri})"><i class="fas fa-pen"></i></button>
+                    <button class="btn-sm btn-del-a" onclick="deleteAssignment(${ri})"><i class="fas fa-trash"></i></button>
+                </td>`;
+            tbody.appendChild(row);
+        });
+    }
+    document.getElementById("logoutBtn").onclick=function(){if(confirm("Logout?")){localStorage.removeItem("userEmail");localStorage.removeItem("userName");window.location.href="login.html";}};
+    window.onload=()=>{loadAssignments();initSidebar();}
+</script>
+</body>
+</html>

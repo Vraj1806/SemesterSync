@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SemesterSync - Settings</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg:#f4f7fe; --sidebar-bg:#fff; --primary:#4318ff;
+            --text:#1b2559; --muted:#a3aed0; --shadow:0 10px 30px rgba(0,0,0,.06);
+            --card:#fff; --border:#e0e5f2; --radius:16px;
+        }
+        body.dark {
+            --bg:#0f1117; --sidebar-bg:#161b27; --primary:#7b52ff;
+            --text:#e2e8f0; --muted:#64748b; --shadow:0 10px 30px rgba(0,0,0,.3);
+            --card:#1e2535; --border:#2d3748;
+        }
+        body.dense { font-size:13px; }
+        *{ box-sizing:border-box; margin:0; padding:0; }
+        body{ font-family:'Segoe UI',sans-serif; background:var(--bg); color:var(--text); display:flex; height:100vh; overflow:hidden; transition:background .3s,color .3s; }
+
+        /* ── SIDEBAR ── */
+        .sidebar{ width:240px; background:var(--sidebar-bg); height:100vh; padding:20px; border-right:1px solid var(--border); display:flex; flex-direction:column; flex-shrink:0; transition:background .3s; }
+        .logo{ font-size:19px; font-weight:700; color:var(--primary); margin-bottom:32px; display:flex; align-items:center; gap:10px; }
+        .logo img{ width:34px; height:34px; object-fit:contain; }
+        .nav-item{ display:flex; align-items:center; padding:11px 14px; text-decoration:none; color:var(--muted); font-weight:500; border-radius:10px; margin-bottom:4px; font-size:14px; transition:all .2s; cursor:pointer; border:none; background:none; width:100%; }
+        .nav-item:hover,.nav-item.active{ background:rgba(67,24,255,.08); color:var(--primary); }
+        .nav-item i{ margin-right:14px; width:16px; font-size:14px; }
+        .sec-label{ font-size:11px; color:var(--muted); margin:24px 0 10px 14px; text-transform:uppercase; letter-spacing:.8px; }
+        .sidebar-spacer{ flex:1; }
+        .btn-signout{ display:flex; align-items:center; padding:11px 14px; color:#ff5b5b; font-weight:500; border-radius:10px; font-size:14px; cursor:pointer; border:none; background:none; width:100%; transition:background .2s; }
+        .btn-signout:hover{ background:rgba(255,91,91,.08); }
+        .btn-signout i{ margin-right:14px; width:16px; }
+
+        /* ── MAIN ── */
+        .main{ flex:1; display:flex; flex-direction:column; overflow:hidden; }
+
+        /* topbar */
+        .topbar{ display:flex; align-items:center; padding:18px 30px; border-bottom:1px solid var(--border); background:var(--sidebar-bg); gap:16px; flex-shrink:0; transition:background .3s; }
+        .topbar-back{ width:34px; height:34px; border-radius:9px; border:1px solid var(--border); background:none; cursor:pointer; color:var(--muted); display:flex; align-items:center; justify-content:center; font-size:15px; transition:all .2s; }
+        .topbar-back:hover{ background:var(--bg); color:var(--primary); }
+        .topbar h2{ font-size:22px; font-weight:700; color:var(--text); flex:1; }
+        .topbar-dot{ width:8px; height:8px; border-radius:50%; background:var(--primary); margin-left:6px; display:inline-block; }
+        .search-wrap{ position:relative; }
+        .search-wrap input{ padding:9px 16px 9px 36px; border-radius:20px; border:1px solid var(--border); font-size:13px; outline:none; width:200px; color:var(--text); background:var(--bg); font-family:inherit; }
+        .search-wrap input:focus{ border-color:var(--primary); }
+        .search-wrap i{ position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--muted); font-size:13px; }
+        .avatar-btn{ width:38px; height:38px; border-radius:50%; background:var(--primary); border:none; cursor:pointer; color:#fff; font-weight:700; font-size:14px; display:flex; align-items:center; justify-content:center; position:relative; }
+
+        /* ── SETTINGS LAYOUT ── */
+        .settings-body{ display:flex; flex:1; overflow:hidden; }
+
+        /* left menu */
+        .settings-menu{ width:260px; padding:24px; border-right:1px solid var(--border); overflow-y:auto; flex-shrink:0; }
+        .menu-label{ font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.8px; margin-bottom:12px; }
+        .menu-item{ display:flex; align-items:center; gap:14px; padding:13px 14px; border-radius:12px; cursor:pointer; border:none; background:none; width:100%; color:var(--muted); font-size:14px; font-weight:500; transition:all .2s; margin-bottom:4px; font-family:inherit; }
+        .menu-item:hover{ background:rgba(67,24,255,.06); color:var(--text); }
+        .menu-item.active{ background:rgba(67,24,255,.1); color:var(--primary); }
+        .menu-item .mi-icon{ width:34px; height:34px; border-radius:9px; background:var(--bg); display:flex; align-items:center; justify-content:center; font-size:15px; flex-shrink:0; transition:background .2s; }
+        .menu-item.active .mi-icon{ background:rgba(67,24,255,.15); }
+        .mi-text{ text-align:left; }
+        .mi-text strong{ display:block; font-size:13px; font-weight:600; color:var(--text); }
+        .mi-text span{ font-size:11px; color:var(--muted); }
+        .menu-item.active .mi-text strong{ color:var(--primary); }
+        .menu-active-bar{ width:3px; height:100%; background:var(--primary); border-radius:2px; margin-left:auto; opacity:0; }
+        .menu-item.active .menu-active-bar{ opacity:1; }
+
+        .alpha-box{ background:rgba(67,24,255,.07); border:1px solid rgba(67,24,255,.2); border-radius:12px; padding:14px; margin-top:16px; }
+        .alpha-box .alpha-title{ font-size:12px; font-weight:700; color:var(--primary); display:flex; align-items:center; gap:6px; margin-bottom:6px; }
+        .alpha-box p{ font-size:12px; color:var(--muted); line-height:1.5; }
+
+        /* right panel */
+        .settings-panel{ flex:1; overflow-y:auto; padding:32px; }
+        .panel-section{ display:none; }
+        .panel-section.active{ display:block; }
+
+        .panel-title{ font-size:26px; font-weight:800; color:var(--text); margin-bottom:6px; text-transform:uppercase; letter-spacing:1px; }
+        .panel-sub{ font-size:14px; color:var(--muted); margin-bottom:32px; }
+
+        .section-head{ font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:16px; padding-bottom:8px; border-bottom:1px solid var(--border); }
+
+        /* Toggle rows */
+        .toggle-row{ display:flex; align-items:center; justify-content:space-between; padding:18px 0; border-bottom:1px solid var(--border); }
+        .toggle-row:last-child{ border-bottom:none; }
+        .toggle-info strong{ display:block; font-size:13px; font-weight:700; color:var(--text); text-transform:uppercase; letter-spacing:.5px; margin-bottom:4px; }
+        .toggle-info span{ font-size:13px; color:var(--muted); }
+
+        .toggle{ position:relative; width:48px; height:26px; flex-shrink:0; }
+        .toggle input{ opacity:0; width:0; height:0; }
+        .toggle-slider{ position:absolute; inset:0; background:#d1d5db; border-radius:26px; cursor:pointer; transition:background .25s; }
+        .toggle-slider::before{ content:''; position:absolute; width:20px; height:20px; left:3px; top:3px; background:#fff; border-radius:50%; transition:transform .25s; box-shadow:0 1px 4px rgba(0,0,0,.2); }
+        .toggle input:checked + .toggle-slider{ background:var(--primary); }
+        .toggle input:checked + .toggle-slider::before{ transform:translateX(22px); }
+
+        /* Theme cards */
+        .theme-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:32px; }
+        .theme-card{ border:2px solid var(--border); border-radius:14px; padding:18px; cursor:pointer; transition:all .2s; background:var(--card); }
+        .theme-card:hover{ border-color:var(--primary); transform:translateY(-2px); }
+        .theme-card.selected{ border-color:var(--primary); background:rgba(67,24,255,.04); }
+        .theme-card.selected .theme-check{ opacity:1; }
+        .theme-header{ display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px; }
+        .theme-name{ font-size:14px; font-weight:800; text-transform:uppercase; letter-spacing:.5px; }
+        .theme-desc{ font-size:11px; color:var(--muted); margin-top:2px; }
+        .theme-check{ width:20px; height:20px; border-radius:50%; background:var(--primary); display:flex; align-items:center; justify-content:center; opacity:0; transition:opacity .2s; flex-shrink:0; }
+        .theme-check i{ color:#fff; font-size:10px; }
+        .theme-dots{ display:flex; gap:8px; margin-top:10px; }
+        .theme-dot{ width:28px; height:28px; border-radius:50%; }
+
+        /* dark preview bg */
+        .theme-card.dark-preview{ background:#111827; border-color:#374151; }
+        .theme-card.dark-preview .theme-name{ color:#e2e8f0; }
+        .theme-card.dark-preview .theme-desc{ color:#6b7280; }
+        .theme-card.dark-preview:hover{ border-color:#7b52ff; }
+        .theme-card.dark-preview.selected{ border-color:#7b52ff; background:#1a2035; }
+
+        /* Account form */
+        .form-group{ margin-bottom:20px; }
+        .form-group label{ font-size:12px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; display:block; margin-bottom:7px; }
+        .form-group input,.form-group select{ width:100%; padding:11px 14px; border-radius:10px; border:1.5px solid var(--border); font-size:14px; color:var(--text); background:var(--bg); outline:none; font-family:inherit; transition:border-color .2s; }
+        .form-group input:focus{ border-color:var(--primary); }
+        .form-row{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+        .btn-save{ background:var(--primary); color:#fff; border:none; padding:12px 28px; border-radius:10px; font-size:14px; font-weight:600; cursor:pointer; transition:background .2s; font-family:inherit; }
+        .btn-save:hover{ background:#3311dd; }
+
+        /* Security */
+        .security-item{ display:flex; align-items:center; justify-content:space-between; padding:18px 0; border-bottom:1px solid var(--border); }
+        .security-item:last-child{ border-bottom:none; }
+        .sec-info strong{ font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; display:block; margin-bottom:4px; }
+        .sec-info span{ font-size:13px; color:var(--muted); }
+        .sec-badge{ font-size:11px; font-weight:700; padding:4px 12px; border-radius:20px; }
+        .badge-on { background:#e6f9f0; color:#01b574; }
+        .badge-off{ background:#fff0ef; color:#ff5b5b; }
+        .btn-outline{ border:1.5px solid var(--border); background:none; color:var(--text); padding:8px 16px; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; font-family:inherit; transition:all .2s; }
+        .btn-outline:hover{ border-color:var(--primary); color:var(--primary); }
+
+        /* Profile avatar area */
+        .profile-avatar-area{ display:flex; align-items:center; gap:20px; margin-bottom:28px; padding:20px; background:var(--bg); border-radius:14px; border:1px solid var(--border); }
+        .big-avatar{ width:72px; height:72px; border-radius:50%; background:linear-gradient(135deg,var(--primary),#7551ff); display:flex; align-items:center; justify-content:center; font-size:28px; font-weight:700; color:#fff; flex-shrink:0; }
+        .avatar-info h3{ font-size:18px; font-weight:700; margin-bottom:4px; }
+        .avatar-info p{ font-size:13px; color:var(--muted); }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <div class="logo"><img src="images/logo.png" alt="Logo"> SemesterSync</div>
+    <a href="dashboard.html" class="nav-item"><i class="fas fa-home"></i> Dashboard</a>
+    <a href="subjects.html" class="nav-item"><i class="fas fa-book"></i> Subjects</a>
+    <a href="assignments.html" class="nav-item"><i class="fas fa-tasks"></i> Assignments</a>
+    <a href="exams.html" class="nav-item"><i class="fas fa-calendar-alt"></i> Exam Schedule</a>
+    <a href="profile.html" class="nav-item"><i class="fas fa-user"></i> Profile</a>
+    <div class="sec-label">Quick Links</div>
+    <a href="topics.html" class="nav-item"><i class="fas fa-folder"></i> Topics</a>
+    <a href="gpa.html" class="nav-item"><i class="fas fa-chart-line"></i> GPA Tracker</a>
+    <div class="sidebar-spacer"></div>
+    <a href="settings.html" class="nav-item active"><i class="fas fa-cog"></i> Settings</a>
+    <button class="btn-signout" onclick="signOut()"><i class="fas fa-sign-out-alt"></i> Sign Out</button>
+</div>
+
+<div class="main">
+    <!-- topbar -->
+    <div class="topbar">
+        <button class="topbar-back" onclick="history.back()"><i class="fas fa-chevron-left"></i></button>
+        <h2>Preferences <span class="topbar-dot"></span></h2>
+        <div class="search-wrap">
+            <i class="fas fa-search"></i>
+            <input type="text" placeholder="Search everything...">
+        </div>
+        <button class="avatar-btn" id="avatarBtn" onclick="window.location.href='profile.html'">??</button>
+    </div>
+
+    <div class="settings-body">
+        <!-- LEFT MENU -->
+        <div class="settings-menu">
+            <div class="menu-label">Settings Manager</div>
+
+            <button class="menu-item active" onclick="switchPanel('account',this)">
+                <div class="mi-icon"><i class="fas fa-user"></i></div>
+                <div class="mi-text"><strong>Account</strong><span>Personal details and credentials</span></div>
+                <div class="menu-active-bar"></div>
+            </button>
+
+            <button class="menu-item" onclick="switchPanel('notifications',this)">
+                <div class="mi-icon"><i class="fas fa-bell"></i></div>
+                <div class="mi-text"><strong>Notifications</strong><span>System alerts and emails</span></div>
+                <div class="menu-active-bar"></div>
+            </button>
+
+            <button class="menu-item" onclick="switchPanel('appearance',this)">
+                <div class="mi-icon"><i class="fas fa-palette"></i></div>
+                <div class="mi-text"><strong>Appearance</strong><span>UI themes and density</span></div>
+                <div class="menu-active-bar"></div>
+            </button>
+
+            <button class="menu-item" onclick="switchPanel('security',this)">
+                <div class="mi-icon"><i class="fas fa-shield-alt"></i></div>
+                <div class="mi-text"><strong>Security</strong><span>Privacy and data access</span></div>
+                <div class="menu-active-bar"></div>
+            </button>
+
+            <div class="alpha-box">
+                <div class="alpha-title"><i class="fas fa-bolt"></i> Alpha Status</div>
+                <p>You are currently exploring the SemesterSync Student OS Technical Preview.</p>
+            </div>
+        </div>
+
+        <!-- RIGHT PANEL -->
+        <div class="settings-panel">
+
+            <!-- ACCOUNT -->
+            <div class="panel-section active" id="panel-account">
+                <div class="panel-title">Account</div>
+                <div class="panel-sub">Manage your personal details and credentials.</div>
+
+                <div class="profile-avatar-area">
+                    <div class="big-avatar" id="bigAvatar">?</div>
+                    <div class="avatar-info">
+                        <h3 id="acctName">Loading...</h3>
+                        <p id="acctEmail">loading@email.com</p>
+                    </div>
+                </div>
+
+                <div class="section-head">Personal Information</div>
+                <div class="form-row">
+                    <div class="form-group"><label>Full Name</label><input type="text" id="acctNameInput" placeholder="Your name"></div>
+                    <div class="form-group"><label>Email</label><input type="email" id="acctEmailInput" readonly style="opacity:.6;cursor:default;"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>College</label><input type="text" id="acctCollege" placeholder="e.g. MIT"></div>
+                    <div class="form-group"><label>Branch / Major</label><input type="text" id="acctBranch" placeholder="e.g. Computer Science"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>Semester</label>
+                        <select id="acctSemester">
+                            <option value="">Select</option>
+                            <option value="1">Semester 1</option><option value="2">Semester 2</option>
+                            <option value="3">Semester 3</option><option value="4">Semester 4</option>
+                            <option value="5">Semester 5</option><option value="6">Semester 6</option>
+                            <option value="7">Semester 7</option><option value="8">Semester 8</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label>Phone</label><input type="text" id="acctPhone" placeholder="+91 9876543210"></div>
+                </div>
+                <button class="btn-save" onclick="saveAccount()"><i class="fas fa-save"></i> Save Changes</button>
+            </div>
+
+            <!-- NOTIFICATIONS -->
+            <div class="panel-section" id="panel-notifications">
+                <div class="panel-title">Alert Engine</div>
+                <div class="panel-sub">Customize how and when you receive system signals.</div>
+
+                <div class="section-head">Daily Operations</div>
+                <div class="toggle-row">
+                    <div class="toggle-info">
+                        <strong>Morning Briefing</strong>
+                        <span>Daily summary of assignments and schedule at 8 AM.</span>
+                    </div>
+                    <label class="toggle"><input type="checkbox" id="tog-morning" checked onchange="savePrefs()"><span class="toggle-slider"></span></label>
+                </div>
+                <div class="toggle-row">
+                    <div class="toggle-info">
+                        <strong>Task Reminders</strong>
+                        <span>Notifications before task deadlines.</span>
+                    </div>
+                    <label class="toggle"><input type="checkbox" id="tog-tasks" checked onchange="savePrefs()"><span class="toggle-slider"></span></label>
+                </div>
+                <div class="toggle-row">
+                    <div class="toggle-info">
+                        <strong>Assignment Alerts</strong>
+                        <span>Notified when assignment is due soon.</span>
+                    </div>
+                    <label class="toggle"><input type="checkbox" id="tog-assignments" checked onchange="savePrefs()"><span class="toggle-slider"></span></label>
+                </div>
+                <div class="toggle-row">
+                    <div class="toggle-info">
+                        <strong>Exam Countdown</strong>
+                        <span>Daily reminder when an exam is within 7 days.</span>
+                    </div>
+                    <label class="toggle"><input type="checkbox" id="tog-exams" checked onchange="savePrefs()"><span class="toggle-slider"></span></label>
+                </div>
+
+                <div class="section-head" style="margin-top:28px;">Communication Channels</div>
+                <div class="toggle-row">
+                    <div class="toggle-info">
+                        <strong>Browser Notifications</strong>
+                        <span>Push notifications via browser.</span>
+                    </div>
+                    <label class="toggle"><input type="checkbox" id="tog-browser" onchange="savePrefs()"><span class="toggle-slider"></span></label>
+                </div>
+                <div class="toggle-row">
+                    <div class="toggle-info">
+                        <strong>Sound Alerts</strong>
+                        <span>Play a sound when reminders trigger.</span>
+                    </div>
+                    <label class="toggle"><input type="checkbox" id="tog-sound" onchange="savePrefs()"><span class="toggle-slider"></span></label>
+                </div>
+            </div>
+
+            <!-- APPEARANCE -->
+            <div class="panel-section" id="panel-appearance">
+                <div class="panel-title">Appearance</div>
+                <div class="panel-sub">Choose your visual identity across the platform.</div>
+
+                <div class="section-head">Theme</div>
+                <div class="theme-grid">
+                    <div class="theme-card selected" data-theme="default" onclick="selectTheme('default',this)">
+                        <div class="theme-header">
+                            <div><div class="theme-name">Default</div><div class="theme-desc">Standard SemesterSync look</div></div>
+                            <div class="theme-check"><i class="fas fa-check"></i></div>
+                        </div>
+                        <div class="theme-dots">
+                            <div class="theme-dot" style="background:#4318ff;"></div>
+                            <div class="theme-dot" style="background:#a3aed0;"></div>
+                        </div>
+                    </div>
+
+                    <div class="theme-card dark-preview" data-theme="dark" onclick="selectTheme('dark',this)">
+                        <div class="theme-header">
+                            <div><div class="theme-name">Dark Mode</div><div class="theme-desc">Deep technical dark mode</div></div>
+                            <div class="theme-check"><i class="fas fa-check"></i></div>
+                        </div>
+                        <div class="theme-dots">
+                            <div class="theme-dot" style="background:#7b52ff;"></div>
+                            <div class="theme-dot" style="background:#374151;"></div>
+                            <div class="theme-dot" style="background:#1e2535;"></div>
+                        </div>
+                    </div>
+
+                    <div class="theme-card" data-theme="ocean" onclick="selectTheme('ocean',this)" style="background:linear-gradient(135deg,#e8f4fd,#dbeafe);">
+                        <div class="theme-header">
+                            <div><div class="theme-name" style="color:#1e40af;">Ocean</div><div class="theme-desc">Cool blue focus</div></div>
+                            <div class="theme-check"><i class="fas fa-check"></i></div>
+                        </div>
+                        <div class="theme-dots">
+                            <div class="theme-dot" style="background:#1d4ed8;"></div>
+                            <div class="theme-dot" style="background:#38bdf8;"></div>
+                        </div>
+                    </div>
+
+                    <div class="theme-card" data-theme="lavender" onclick="selectTheme('lavender',this)" style="background:linear-gradient(135deg,#f3e8ff,#ede9fe);">
+                        <div class="theme-header">
+                            <div><div class="theme-name" style="color:#7c3aed;">Lavender</div><div class="theme-desc">Female preference focus</div></div>
+                            <div class="theme-check"><i class="fas fa-check"></i></div>
+                        </div>
+                        <div class="theme-dots">
+                            <div class="theme-dot" style="background:#7c3aed;"></div>
+                            <div class="theme-dot" style="background:#c4b5fd;"></div>
+                        </div>
+                    </div>
+
+                    <div class="theme-card" data-theme="rose" onclick="selectTheme('rose',this)" style="background:linear-gradient(135deg,#fff1f2,#ffe4e6);">
+                        <div class="theme-header">
+                            <div><div class="theme-name" style="color:#be123c;">Rose Quartz</div><div class="theme-desc">Sophisticated warmth</div></div>
+                            <div class="theme-check"><i class="fas fa-check"></i></div>
+                        </div>
+                        <div class="theme-dots">
+                            <div class="theme-dot" style="background:#e11d48;"></div>
+                            <div class="theme-dot" style="background:#fda4af;"></div>
+                        </div>
+                    </div>
+
+                    <div class="theme-card" data-theme="gaia" onclick="selectTheme('gaia',this)" style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);">
+                        <div class="theme-header">
+                            <div><div class="theme-name" style="color:#15803d;">Gaia</div><div class="theme-desc">Balanced earth tones</div></div>
+                            <div class="theme-check"><i class="fas fa-check"></i></div>
+                        </div>
+                        <div class="theme-dots">
+                            <div class="theme-dot" style="background:#16a34a;"></div>
+                            <div class="theme-dot" style="background:#86efac;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section-head">Display Options</div>
+                <div class="toggle-row">
+                    <div class="toggle-info">
+                        <strong>High Density Mode</strong>
+                        <span>Reduce whitespace and font sizes for power users.</span>
+                    </div>
+                    <label class="toggle"><input type="checkbox" id="tog-dense" onchange="applyDense();savePrefs()"><span class="toggle-slider"></span></label>
+                </div>
+                <div class="toggle-row">
+                    <div class="toggle-info">
+                        <strong>Reduced Motion</strong>
+                        <span>Minimize animations for maximum scrolling performance.</span>
+                    </div>
+                    <label class="toggle"><input type="checkbox" id="tog-motion" onchange="savePrefs()"><span class="toggle-slider"></span></label>
+                </div>
+                <div class="toggle-row">
+                    <div class="toggle-info">
+                        <strong>Compact Sidebar</strong>
+                        <span>Show only icons in the sidebar.</span>
+                    </div>
+                    <label class="toggle"><input type="checkbox" id="tog-compact" onchange="savePrefs()"><span class="toggle-slider"></span></label>
+                </div>
+            </div>
+
+            <!-- SECURITY -->
+            <div class="panel-section" id="panel-security">
+                <div class="panel-title">Security</div>
+                <div class="panel-sub">Manage your privacy and data access settings.</div>
+
+                <div class="section-head">Account Security</div>
+                <div class="security-item">
+                    <div class="sec-info"><strong>Password</strong><span>Last changed: Never</span></div>
+                    <button class="btn-outline" onclick="window.location.href='profile.html'">Change Password</button>
+                </div>
+                <div class="security-item">
+                    <div class="sec-info"><strong>Two-Factor Authentication</strong><span>Extra layer of security on login.</span></div>
+                    <span class="sec-badge badge-off">Off</span>
+                </div>
+                <div class="security-item">
+                    <div class="sec-info"><strong>Password Hashing</strong><span>Passwords are hashed with SHA-256.</span></div>
+                    <span class="sec-badge badge-on">Active</span>
+                </div>
+
+                <div class="section-head" style="margin-top:28px;">Data & Privacy</div>
+                <div class="toggle-row">
+                    <div class="toggle-info">
+                        <strong>Analytics</strong>
+                        <span>Help improve SemesterSync with anonymous usage data.</span>
+                    </div>
+                    <label class="toggle"><input type="checkbox" id="tog-analytics" checked onchange="savePrefs()"><span class="toggle-slider"></span></label>
+                </div>
+                <div class="toggle-row">
+                    <div class="toggle-info">
+                        <strong>Auto Logout</strong>
+                        <span>Automatically sign out after 30 minutes of inactivity.</span>
+                    </div>
+                    <label class="toggle"><input type="checkbox" id="tog-autologout" onchange="savePrefs()"><span class="toggle-slider"></span></label>
+                </div>
+
+                <div class="section-head" style="margin-top:28px;">Danger Zone</div>
+                <div class="security-item">
+                    <div class="sec-info"><strong>Clear All Data</strong><span>Permanently delete all your tasks, subjects, exams and assignments.</span></div>
+                    <button class="btn-outline" style="border-color:#ff5b5b;color:#ff5b5b;" onclick="clearData()">Clear Data</button>
+                </div>
+                <div class="security-item">
+                    <div class="sec-info"><strong>Delete Account</strong><span>Remove your account permanently. Cannot be undone.</span></div>
+                    <button class="btn-outline" style="border-color:#ff5b5b;color:#ff5b5b;" onclick="deleteAccount()">Delete Account</button>
+                </div>
+            </div>
+
+        </div><!-- /settings-panel -->
+    </div><!-- /settings-body -->
+</div><!-- /main -->
+
+<script src="utils.js"></script>
+<script>
+    if(!localStorage.getItem("userEmail")) window.location.href="login.html";
+    const cu = localStorage.getItem("userEmail");
+
+    // ── helpers ────────────────────────────────────────────────────────────
+    function getInitials(n){ if(!n) return "?"; let p=n.trim().split(" "); return p.length>=2?p[0][0].toUpperCase()+p[1][0].toUpperCase():p[0][0].toUpperCase(); }
+
+    function switchPanel(id, btn){
+        document.querySelectorAll(".panel-section").forEach(p=>p.classList.remove("active"));
+        document.querySelectorAll(".menu-item").forEach(b=>b.classList.remove("active"));
+        document.getElementById("panel-"+id).classList.add("active");
+        btn.classList.add("active");
+    }
+
+    // ── load profile ──────────────────────────────────────────────────────
+    function loadAccount(){
+        const name    = localStorage.getItem("userName")||"";
+        const profile = JSON.parse(localStorage.getItem(cu+"_profile"))||{};
+        const ini = getInitials(name);
+        document.getElementById("bigAvatar").innerText   = ini;
+        document.getElementById("avatarBtn").innerText   = ini;
+        document.getElementById("acctName").innerText    = name||"No name";
+        document.getElementById("acctEmail").innerText   = cu;
+        document.getElementById("acctNameInput").value  = name;
+        document.getElementById("acctEmailInput").value = cu;
+        document.getElementById("acctCollege").value    = profile.college||"";
+        document.getElementById("acctBranch").value     = profile.branch||"";
+        document.getElementById("acctSemester").value   = profile.semester||"";
+        document.getElementById("acctPhone").value      = profile.phone||"";
+    }
+
+    function saveAccount(){
+        const name = document.getElementById("acctNameInput").value.trim();
+        if(!name){ showToast("Name cannot be empty.","error"); return; }
+        localStorage.setItem("userName",name);
+        localStorage.setItem(cu+"_profile", JSON.stringify({
+            college:  document.getElementById("acctCollege").value.trim(),
+            branch:   document.getElementById("acctBranch").value.trim(),
+            semester: document.getElementById("acctSemester").value,
+            phone:    document.getElementById("acctPhone").value.trim()
+        }));
+        showToast("Account saved!","success");
+        loadAccount();
+    }
+
+    // ── preferences ───────────────────────────────────────────────────────
+    const PREF_KEY = cu+"_prefs";
+
+    function loadPrefs(){
+        const p = JSON.parse(localStorage.getItem(PREF_KEY))||{};
+        const set = (id,val,def=true) => { const el=document.getElementById(id); if(el) el.checked = val===undefined?def:val; };
+        set("tog-morning",    p.morning);
+        set("tog-tasks",      p.tasks);
+        set("tog-assignments",p.assignments);
+        set("tog-exams",      p.exams);
+        set("tog-browser",    p.browser,    false);
+        set("tog-sound",      p.sound,      false);
+        set("tog-dense",      p.dense,      false);
+        set("tog-motion",     p.motion,     false);
+        set("tog-compact",    p.compact,    false);
+        set("tog-analytics",  p.analytics);
+        set("tog-autologout", p.autologout, false);
+
+        // apply theme
+        if(p.theme) applyTheme(p.theme, false);
+        if(p.dense) applyDense();
+    }
+
+    function savePrefs(){
+        const get = id => document.getElementById(id)?.checked;
+        localStorage.setItem(PREF_KEY, JSON.stringify({
+            morning:p("tog-morning"), tasks:p("tog-tasks"), assignments:p("tog-assignments"),
+            exams:p("tog-exams"), browser:p("tog-browser"), sound:p("tog-sound"),
+            dense:p("tog-dense"), motion:p("tog-motion"), compact:p("tog-compact"),
+            analytics:p("tog-analytics"), autologout:p("tog-autologout"),
+            theme: document.querySelector(".theme-card.selected")?.dataset.theme||"default"
+        }));
+        function p(id){ return document.getElementById(id)?.checked; }
+        showToast("Preferences saved!","success");
+    }
+
+    // ── theme ─────────────────────────────────────────────────────────────
+    const themes = {
+        default:  { primary:"#4318ff", bg:"#f4f7fe" },
+        dark:     { primary:"#7b52ff", bg:"#0f1117", dark:true },
+        ocean:    { primary:"#1d4ed8", bg:"#eff6ff" },
+        lavender: { primary:"#7c3aed", bg:"#faf5ff" },
+        rose:     { primary:"#e11d48", bg:"#fff1f2" },
+        gaia:     { primary:"#16a34a", bg:"#f0fdf4" }
+    };
+
+    function selectTheme(name, el){
+        document.querySelectorAll(".theme-card").forEach(c=>c.classList.remove("selected"));
+        el.classList.add("selected");
+        applyTheme(name, true);
+        savePrefs();
+    }
+
+    function applyTheme(name, save){
+        const t = themes[name]||themes.default;
+        document.documentElement.style.setProperty("--primary", t.primary);
+        document.documentElement.style.setProperty("--bg", t.bg);
+        if(t.dark){ document.body.classList.add("dark"); }
+        else       { document.body.classList.remove("dark"); }
+        // sync selected card
+        document.querySelectorAll(".theme-card").forEach(c=>{
+            c.classList.toggle("selected", c.dataset.theme===name);
+        });
+        // save globally so other pages can pick it up
+        if(save !== false) localStorage.setItem(cu+"_theme", name);
+    }
+
+    function applyDense(){
+        if(document.getElementById("tog-dense").checked) document.body.classList.add("dense");
+        else document.body.classList.remove("dense");
+    }
+
+    // ── security actions ──────────────────────────────────────────────────
+    function clearData(){
+        if(!confirm("Delete ALL tasks, subjects, assignments, exams and topics? This cannot be undone.")) return;
+        ["_tasks","_assignments","_subjects","_exams","_topics","_grades","_profile"].forEach(k=>localStorage.removeItem(cu+k));
+        showToast("All data cleared.","info");
+    }
+
+    function deleteAccount(){
+        if(!confirm("Permanently delete your account? This cannot be undone.")) return;
+        if(!confirm("Are you absolutely sure?")) return;
+        let users = JSON.parse(localStorage.getItem("users"))||[];
+        users = users.filter(u=>u.email!==cu);
+        localStorage.setItem("users",JSON.stringify(users));
+        ["_tasks","_assignments","_subjects","_exams","_topics","_grades","_profile","_prefs","_theme"].forEach(k=>localStorage.removeItem(cu+k));
+        localStorage.removeItem("userEmail"); localStorage.removeItem("userName");
+        showToast("Account deleted. Goodbye!","info");
+        setTimeout(()=>window.location.href="login.html",1500);
+    }
+
+    function signOut(){
+        if(confirm("Sign out?")){
+            localStorage.removeItem("userEmail"); localStorage.removeItem("userName");
+            window.location.href="login.html";
+        }
+    }
+
+    // ── init ──────────────────────────────────────────────────────────────
+    window.onload=()=>{
+        loadAccount();
+        loadPrefs();
+        // apply saved theme
+        const saved = localStorage.getItem(cu+"_theme");
+        if(saved) applyTheme(saved, false);
+        initSidebar();
+    }
+</script>
+</body>
+</html>

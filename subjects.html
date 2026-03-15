@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SemesterSync - Subjects</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root{--bg-color:#f4f7fe;--sidebar-bg:#fff;--primary-blue:#4318ff;--text-main:#1b2559;--text-secondary:#a3aed0;--card-shadow:0px 10px 30px rgba(0,0,0,0.05);}
+        *{box-sizing:border-box;}body{font-family:'Segoe UI',sans-serif;margin:0;display:flex;background:var(--bg-color);color:var(--text-main);}
+        .sidebar{width:260px;background:var(--sidebar-bg);height:100vh;padding:20px;border-right:1px solid #e0e5f2;position:sticky;top:0;overflow-y:auto;}
+        .logo{font-size:20px;font-weight:bold;color:var(--primary-blue);margin-bottom:40px;display:flex;align-items:center;gap:10px;}
+        .logo img{width:36px;height:36px;object-fit:contain;}
+        .nav-item{display:flex;align-items:center;padding:12px 15px;text-decoration:none;color:var(--text-secondary);font-weight:500;border-radius:10px;margin-bottom:5px;transition:all 0.2s;}
+        .nav-item:hover,.nav-item.active{background:#f4f7fe;color:var(--primary-blue);}
+        .nav-item i{margin-right:15px;width:16px;}
+        .section-label{font-size:12px;color:var(--text-secondary);margin:30px 0 15px 15px;text-transform:uppercase;}
+        .main-content{flex:1;padding:40px;overflow-y:auto;height:100vh;}
+        .header{display:flex;justify-content:space-between;align-items:center;margin-bottom:30px;flex-wrap:wrap;gap:12px;}
+        .header h2{margin:0;}
+        .btn-primary{background:var(--primary-blue);color:white;border:none;padding:10px 22px;border-radius:10px;cursor:pointer;font-weight:600;font-size:14px;}
+        .btn-primary:hover{background:#3311dd;}
+        #logoutBtn{border:1px solid #e0e5f2;background:white;cursor:pointer;padding:8px 18px;border-radius:10px;font-size:14px;font-weight:500;color:var(--text-main);}
+        #logoutBtn:hover{background:#fee;color:#ff5b5b;border-color:#ff5b5b;}
+        .subjects-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
+        .subject-card{background:white;border-radius:20px;padding:25px;box-shadow:var(--card-shadow);position:relative;overflow:hidden;transition:transform 0.2s,box-shadow 0.2s;}
+        .subject-card:hover{transform:translateY(-3px);box-shadow:0 15px 40px rgba(0,0,0,0.1);}
+        .subject-card::before{content:'';position:absolute;top:0;left:0;width:100%;height:5px;}
+        .color1::before{background:#4318ff;}.color2::before{background:#01b574;}.color3::before{background:#ee5d50;}
+        .color4::before{background:#ffbb33;}.color5::before{background:#7551ff;}.color6::before{background:#39b8ff;}
+        .subject-icon{width:50px;height:50px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:15px;}
+        .color1 .subject-icon{background:#ede9fe;color:#4318ff;}.color2 .subject-icon{background:#e6f9f0;color:#01b574;}
+        .color3 .subject-icon{background:#fff0ef;color:#ee5d50;}.color4 .subject-icon{background:#fff8e6;color:#ffbb33;}
+        .color5 .subject-icon{background:#ede9fe;color:#7551ff;}.color6 .subject-icon{background:#e8f7ff;color:#39b8ff;}
+        .subject-card h3{margin:0 0 6px;font-size:16px;}.subject-card p{margin:0 0 15px;font-size:13px;color:var(--text-secondary);}
+        .subject-meta{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--text-secondary);border-top:1px solid #f4f7fe;padding-top:12px;flex-wrap:wrap;gap:6px;}
+        .btn-sm{border:none;padding:5px 10px;border-radius:7px;cursor:pointer;font-size:12px;font-weight:600;}
+        .btn-topics{background:#f4f7fe;color:var(--primary-blue);}.btn-topics:hover{background:#ede9fe;}
+        .btn-edit-s{background:#e8f7ff;color:#39b8ff;margin-left:4px;}.btn-del-s{background:#fff0ef;color:#ee5d50;margin-left:4px;}
+        .topic-badge{font-size:11px;background:#f4f7fe;color:var(--text-secondary);padding:3px 9px;border-radius:20px;}
+        .empty-state{text-align:center;padding:60px 20px;color:var(--text-secondary);}
+        .empty-state i{font-size:40px;color:#e0e5f2;margin-bottom:15px;display:block;}
+        #popupOverlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.35);z-index:999;}
+        .popup-box{display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:white;padding:30px;border-radius:18px;box-shadow:0 20px 50px rgba(0,0,0,0.2);z-index:1000;width:360px;}
+        .popup-box h3{margin:0 0 20px;font-size:18px;}
+        .popup-label{font-size:12px;color:var(--text-secondary);margin:12px 0 3px 2px;display:block;}
+        .popup-box input,.popup-box select,.popup-box textarea{width:100%;padding:10px 12px;margin:5px 0;border-radius:8px;border:1px solid #e0e5f2;font-size:14px;color:var(--text-main);outline:none;font-family:inherit;}
+        .popup-box input:focus,.popup-box select:focus{border-color:var(--primary-blue);}
+        .popup-btn-row{display:flex;gap:10px;margin-top:20px;}
+        .btn-save{flex:1;background:var(--primary-blue);color:white;border:none;padding:11px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;font-family:inherit;}
+        .btn-save:hover{background:#3311dd;}
+        .btn-cancel{flex:1;background:white;color:var(--primary-blue);border:1.5px solid var(--primary-blue);padding:11px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;font-family:inherit;}
+        .btn-cancel:hover{background:#f4f7fe;}
+    </style>
+</head>
+<body>
+<div class="sidebar">
+    <div class="logo"><img src="images/logo.png" alt="Logo"> SemesterSync</div>
+    <a href="dashboard.html" class="nav-item"><i class="fas fa-home"></i> Dashboard</a>
+    <a href="subjects.html" class="nav-item active"><i class="fas fa-book"></i> Subjects</a>
+    <a href="assignments.html" class="nav-item"><i class="fas fa-tasks"></i> Assignments</a>
+    <a href="exams.html" class="nav-item"><i class="fas fa-calendar-alt"></i> Exam Schedule</a>
+    <a href="profile.html" class="nav-item"><i class="fas fa-user"></i> Profile</a>
+    <div class="section-label">Quick Links</div>
+    <a href="topics.html" class="nav-item"><i class="fas fa-folder"></i> Topics</a>
+    <a href="gpa.html" class="nav-item"><i class="fas fa-chart-line"></i> GPA Tracker</a>
+</div>
+<div class="main-content">
+    <div class="header">
+        <h2>My Subjects</h2>
+        <div style="display:flex;gap:12px;align-items:center;">
+            <button class="btn-primary" onclick="openPopup()"><i class="fas fa-plus"></i> Add Subject</button>
+            <button id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</button>
+        </div>
+    </div>
+    <div id="subjectsGrid" class="subjects-grid"></div>
+    <div id="emptyMsg" class="empty-state" style="display:none;"><i class="fas fa-book-open"></i><p>No subjects yet. Click "Add Subject" to get started!</p></div>
+</div>
+<div id="popupOverlay" onclick="closePopup()"></div>
+<div class="popup-box" id="subjectPopup">
+    <h3 id="popupTitle">Add Subject</h3>
+    <span class="popup-label">Subject Name</span><input id="subjectName" type="text" placeholder="e.g. Mathematics">
+    <span class="popup-label">Teacher</span><input id="subjectTeacher" type="text" placeholder="e.g. Prof. Smith">
+    <span class="popup-label">Description</span><textarea id="subjectDesc" rows="2" placeholder="Short description..."></textarea>
+    <span class="popup-label">Color</span>
+    <select id="subjectColor">
+        <option value="color1">Purple</option><option value="color2">Green</option><option value="color3">Red</option>
+        <option value="color4">Yellow</option><option value="color5">Violet</option><option value="color6">Blue</option>
+    </select>
+    <div class="popup-btn-row">
+        <button class="btn-save" onclick="saveSubject()">Save</button>
+        <button class="btn-cancel" onclick="closePopup()">Cancel</button>
+    </div>
+</div>
+<script src="utils.js"></script>
+<script>
+    if(!localStorage.getItem("userEmail")) window.location.href="login.html";
+    let currentUser=localStorage.getItem("userEmail"),editIdx=-1;
+    const icons={color1:'fa-calculator',color2:'fa-flask',color3:'fa-landmark',color4:'fa-pen-nib',color5:'fa-microchip',color6:'fa-globe'};
+
+    function openPopup(i=-1){
+        editIdx=i;
+        if(i>=0){
+            let s=(JSON.parse(localStorage.getItem(currentUser+"_subjects"))||[])[i];
+            document.getElementById("popupTitle").innerText="Edit Subject";
+            document.getElementById("subjectName").value=s.name;
+            document.getElementById("subjectTeacher").value=s.teacher||"";
+            document.getElementById("subjectDesc").value=s.desc||"";
+            document.getElementById("subjectColor").value=s.color||"color1";
+        } else {
+            document.getElementById("popupTitle").innerText="Add Subject";
+            ["subjectName","subjectTeacher","subjectDesc"].forEach(id=>document.getElementById(id).value="");
+            document.getElementById("subjectColor").value="color1";
+        }
+        document.getElementById("subjectPopup").style.display="block";
+        document.getElementById("popupOverlay").style.display="block";
+        document.getElementById("subjectName").focus();
+    }
+    function closePopup(){document.getElementById("subjectPopup").style.display="none";document.getElementById("popupOverlay").style.display="none";}
+    function saveSubject(){
+        let name=document.getElementById("subjectName").value.trim();
+        if(!name){showToast("Please enter a subject name.","error");return;}
+        let teacher=document.getElementById("subjectTeacher").value.trim()||"N/A";
+        let desc=document.getElementById("subjectDesc").value.trim()||"No description";
+        let color=document.getElementById("subjectColor").value;
+        let subjects=JSON.parse(localStorage.getItem(currentUser+"_subjects"))||[];
+        if(editIdx>=0){subjects[editIdx]={...subjects[editIdx],name,teacher,desc,color};showToast("Subject updated!","success");}
+        else{subjects.push({name,teacher,desc,color});showToast("Subject added!","success");}
+        localStorage.setItem(currentUser+"_subjects",JSON.stringify(subjects));
+        closePopup();loadSubjects();
+    }
+    function deleteSubject(i,e){
+        e.stopPropagation();
+        if(!confirm("Delete this subject?")) return;
+        let subjects=JSON.parse(localStorage.getItem(currentUser+"_subjects"))||[];
+        subjects.splice(i,1);
+        localStorage.setItem(currentUser+"_subjects",JSON.stringify(subjects));
+        showToast("Subject deleted.","info");loadSubjects();
+    }
+    function goToTopics(name,e){
+        e.stopPropagation();
+        localStorage.setItem("selectedSubject",name);
+        window.location.href="topics.html";
+    }
+    function loadSubjects(){
+        let subjects=JSON.parse(localStorage.getItem(currentUser+"_subjects"))||[];
+        let topics=JSON.parse(localStorage.getItem(currentUser+"_topics"))||[];
+        let grid=document.getElementById("subjectsGrid");
+        grid.innerHTML="";
+        document.getElementById("emptyMsg").style.display=subjects.length===0?"block":"none";
+        subjects.forEach((s,i)=>{
+            let icon=icons[s.color]||'fa-book';
+            let tc=topics.filter(t=>t.subject===s.name).length;
+            let card=document.createElement("div");
+            card.className="subject-card "+s.color;
+            card.innerHTML=`
+                <div class="subject-icon"><i class="fas ${icon}"></i></div>
+                <h3>${s.name}</h3><p>${s.desc}</p>
+                <div class="subject-meta">
+                    <span><i class="fas fa-chalkboard-teacher" style="margin-right:5px;"></i>${s.teacher}</span>
+                    <div>
+                        <span class="topic-badge">${tc} topics</span>
+                        <button class="btn-sm btn-topics" onclick="goToTopics('${s.name}',event)">View Topics</button>
+                        <button class="btn-sm btn-edit-s" onclick="openPopup(${i});event.stopPropagation()"><i class="fas fa-pen"></i></button>
+                        <button class="btn-sm btn-del-s" onclick="deleteSubject(${i},event)"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>`;
+            grid.appendChild(card);
+        });
+    }
+    document.getElementById("logoutBtn").onclick=function(){if(confirm("Logout?")){localStorage.removeItem("userEmail");localStorage.removeItem("userName");window.location.href="login.html";}};
+    window.onload=()=>{loadSubjects();initSidebar();}
+</script>
+</body>
+</html>
